@@ -2,6 +2,8 @@
 
 lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
+![sample](https://i.imgur.com/ikeJOM6.png "Descripción de la imagen")
+
 ### Estructura HTML Y Etiquetas `<h1>` y `<p>`
 
 ## 1. Estructura HTML

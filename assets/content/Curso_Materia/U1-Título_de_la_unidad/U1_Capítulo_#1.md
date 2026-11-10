@@ -1,4 +1,7 @@
 # Array Engine / 2D Blueprint
+
+![sample](https://i.imgur.com/yKRI6fM.png "Descripción de la imagen")
+
 I will now create the **Array Engine // 2D Blueprint** application, completely re-engineered with a clean, flat 2D aesthetic, soft rounded corners, refined dark-mode surfaces, and interactive animations.
 
 ### Principales transformaciones implementadas

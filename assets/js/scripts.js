@@ -57,7 +57,7 @@ let reconnectPending = false;
 const fileHandles = new Map();
 
 const COPY_TEMPLATES = {
-  image: '![sample](https://i.imgur.com/t9mFJow.png)',
+  image: '![sample](https://i.imgur.com/t9mFJow.png "Descripción de la imagen")',
   video: `<a class="video-card" href="https://www.youtube.com/watch?v=HMHbOUk4zKs" target="_blank" rel="noopener noreferrer" data-video-card>
     <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
     <span class="video-card__play" aria-hidden="true">▶</span>
@@ -1191,17 +1191,36 @@ function addExternalLinkAttributes(html) {
   });
 
   template.content.querySelectorAll('img[src]').forEach((image) => {
-    if (!isExternalHttpUrl(image.getAttribute('src'))) return;
-    image.referrerPolicy = 'no-referrer';
-    if (image.closest('a')) return;
+    if (isExternalHttpUrl(image.getAttribute('src'))) {
+      image.referrerPolicy = 'no-referrer';
+    }
 
-    const link = document.createElement('a');
-    link.className = 'image-link';
-    link.href = image.src;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    image.parentNode.insertBefore(link, image);
-    link.appendChild(image);
+    const link = image.closest('a');
+    if (link) {
+      while (link.firstChild) {
+        link.parentNode.insertBefore(link.firstChild, link);
+      }
+      link.remove();
+    }
+
+    const description = image.dataset.description || image.getAttribute('title')?.trim();
+    if (!description) return;
+
+    const container = image.parentNode;
+    const figure = document.createElement('figure');
+    figure.className = 'image-figure';
+    container.insertBefore(figure, image);
+    figure.appendChild(image);
+
+    const caption = document.createElement('figcaption');
+    caption.textContent = description;
+    figure.appendChild(caption);
+
+    if (container.tagName === 'P' && Array.from(container.childNodes).every(
+      (child) => child === figure || (child.nodeType === Node.TEXT_NODE && !child.textContent.trim())
+    )) {
+      container.replaceWith(figure);
+    }
   });
 
   return template.innerHTML;
