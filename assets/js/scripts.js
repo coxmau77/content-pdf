@@ -1,8 +1,10 @@
-const A4_WIDTH_PX = (210 / 25.4) * 96;
-
 const PREFS_KEY = 'content-pdf:prefs';
 const LAST_DOC_KEY = 'content-pdf:last-doc';
-const DEFAULT_PREFS = { fontSize: '12px', margin: '20mm', grid: false };
+const PAGE_SIZES = {
+  a4: { label: 'A4', width: 210, height: 297 },
+  oficio: { label: 'Oficio', width: 216, height: 330 },
+};
+const DEFAULT_PREFS = { pageSize: 'a4', fontSize: '12px', margin: '20mm', grid: false };
 const VIDEO_DESCRIPTION_PREVIEW_LIMIT = 180;
 
 const DOC_ICON = `
@@ -21,6 +23,7 @@ const docsPopover = document.getElementById('docs-popover');
 const actionOptions = document.getElementById('action-options');
 const copyFeedback = document.getElementById('copy-feedback');
 const optionsPopover = document.getElementById('options-popover');
+const pageSizeSelect = document.getElementById('page-size');
 const fontSelect = document.getElementById('font-size');
 const marginSelect = document.getElementById('margin-size');
 const gridToggle = document.getElementById('toggle-grid');
@@ -31,6 +34,9 @@ const folderInfo = document.getElementById('folder-info');
 const docsPopoverTitle = document.getElementById('docs-popover-title');
 const saveBtn = document.getElementById('save-doc');
 const previewTitle = document.getElementById('preview-title');
+const pageSizeLabel = document.getElementById('page-size-label');
+const printPageStyle = document.createElement('style');
+document.head.appendChild(printPageStyle);
 
 const measureHost = document.createElement('div');
 measureHost.className = 'pdf-preview pdf-measure';
@@ -40,6 +46,8 @@ document.body.appendChild(measureHost);
 let activeBtn = null;
 let prefs = { ...DEFAULT_PREFS };
 let DOCS = [];
+let previewHtml = '';
+let previewDocumentTitle = '';
 const docButtons = new Map();
 
 let currentDoc = null;
@@ -107,6 +115,9 @@ function loadPrefs() {
     if (!raw) return storedPrefs;
 
     const stored = JSON.parse(raw);
+    if (getOptionValues(pageSizeSelect).includes(stored.pageSize)) {
+      storedPrefs.pageSize = stored.pageSize;
+    }
     if (getOptionValues(fontSelect).includes(stored.fontSize)) {
       storedPrefs.fontSize = stored.fontSize;
     }
@@ -132,13 +143,19 @@ function savePrefs() {
 }
 
 function applyPrefs() {
+  const pageSize = PAGE_SIZES[prefs.pageSize];
+  pageSizeSelect.value = prefs.pageSize;
+  pageSizeLabel.textContent = pageSize.label;
   fontSelect.value = prefs.fontSize;
   marginSelect.value = prefs.margin;
   gridToggle.checked = prefs.grid;
 
+  pdfPreview.style.setProperty('--page-width', `${pageSize.width}mm`);
+  pdfPreview.style.setProperty('--page-height', `${pageSize.height}mm`);
   pdfPreview.style.setProperty('--doc-font-size', prefs.fontSize);
   pdfPreview.style.setProperty('--page-margin', prefs.margin);
   pdfPreview.classList.toggle('grid', prefs.grid);
+  printPageStyle.textContent = `@page { size: ${pageSize.width}mm ${pageSize.height}mm; margin: 0; }`;
 }
 
 function getLastDocPath() {
@@ -433,8 +450,11 @@ function buildDocsList() {
     });
 }
 
-/* ---------- Paginación A4 ---------- */
+/* ---------- Paginación ---------- */
 function syncMeasureStyles() {
+  const pageSize = PAGE_SIZES[prefs.pageSize];
+  measureHost.style.setProperty('--page-width', `${pageSize.width}mm`);
+  measureHost.style.setProperty('--page-height', `${pageSize.height}mm`);
   measureHost.style.setProperty('--doc-font-size', prefs.fontSize);
   measureHost.style.setProperty('--page-margin', prefs.margin);
 }
@@ -833,6 +853,8 @@ function createPageFooter(title, current, total) {
 }
 
 function renderPages(html, title = '') {
+  previewHtml = html;
+  previewDocumentTitle = title;
   const pages = paginate(decorateCodeBlocks(addExternalLinkAttributes(html)));
   const total = pages.length;
 
@@ -1524,11 +1546,20 @@ function fitPreview() {
   const available = previewWrap.clientWidth - 48;
   if (available <= 0) return;
 
-  const scale = Math.min(1, available / A4_WIDTH_PX);
+  const pageWidthPx = (PAGE_SIZES[prefs.pageSize].width / 25.4) * 96;
+  const scale = Math.min(1, available / pageWidthPx);
   pdfPreview.style.zoom = scale;
 }
 
 function initFormatControls() {
+  pageSizeSelect.addEventListener('change', () => {
+    prefs.pageSize = pageSizeSelect.value;
+    applyPrefs();
+    savePrefs();
+    renderPages(previewHtml, previewDocumentTitle);
+    fitPreview();
+  });
+
   fontSelect.addEventListener('change', () => {
     prefs.fontSize = fontSelect.value;
     pdfPreview.style.setProperty('--doc-font-size', prefs.fontSize);

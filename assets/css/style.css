@@ -13,6 +13,8 @@
     --doc-font-size: 12px;
     --page-margin: 20mm;
     --page-gap: 24px;
+    --page-width: 210mm;
+    --page-height: 297mm;
 
     --radius: 10px;
     --shadow: 0 12px 32px rgba(15, 23, 42, .16);
@@ -457,7 +459,7 @@ aside .pane-header h1 {
     flex-direction: column;
     gap: var(--page-gap);
     flex-shrink: 0;
-    width: 210mm;
+    width: var(--page-width);
     background: transparent;
 }
 
@@ -469,8 +471,8 @@ aside .pane-header h1 {
 .pdf-page {
     position: relative;
     flex-shrink: 0;
-    width: 210mm;
-    height: 297mm;
+    width: var(--page-width);
+    height: var(--page-height);
     overflow: hidden;
     background: #fff;
     box-shadow: 0 6px 24px rgba(15, 23, 42, .18);
@@ -972,11 +974,6 @@ aside .pane-header h1 {
 
 /* ---------- Impresión / Exportar a PDF ---------- */
 @media print {
-    @page {
-        size: A4;
-        margin: 0;
-    }
-
     body {
         display: block;
         height: auto;
@@ -1017,8 +1014,8 @@ aside .pane-header h1 {
     }
 
     .pdf-page {
-        width: 210mm;
-        height: 297mm;
+        width: var(--page-width);
+        height: var(--page-height);
         margin: 0;
         box-shadow: none;
     }

@@ -8,7 +8,20 @@ lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor i
 
 Empezá por este video:
 
-<iframe width="600" height="355" src="https://www.youtube.com/embed/HMHbOUk4zKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<a class="video-card" href="https://www.youtube.com/watch?v=HMHbOUk4zKs" target="_blank" rel="noopener noreferrer" data-video-card>
+    <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
+    <span class="video-card__play" aria-hidden="true">▶</span>
+    </div>
+    <div class="video-card__details">
+    <p class="video-card__eyebrow">Video</p>
+    <h3 class="video-card__title" data-video-title>Cargando título...</h3>
+    <p class="video-card__metadata">
+      <span data-video-author>Cargando información...</span>
+      <span data-video-provider></span>
+    </p>
+    <p class="video-card__description" data-video-description>Escribe aquí un resumen introductorio del video.</p>
+    </div>
+</a>
 
 Para crear una página web básica en HTML necesitarás al menos las siguientes etiquetas:
 
