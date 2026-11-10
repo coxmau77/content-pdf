@@ -634,14 +634,26 @@ function scheduleImageReflow() {
   });
 }
 
-function renderPages(html) {
+function createPageFooter(title, current, total) {
+  const footer = document.createElement('div');
+  footer.className = 'pdf-sheet-footer';
+
+  const label = `Página ${current} de ${total}`;
+  footer.textContent = title ? `${title} — ${label}` : label;
+
+  return footer;
+}
+
+function renderPages(html, title = '') {
   const pages = paginate(html);
+  const total = pages.length;
 
   pdfPreview.innerHTML = '';
   pages.forEach((page, index) => {
     const sheet = document.createElement('div');
     sheet.className = 'pdf-sheet';
     sheet.dataset.page = String(index + 1);
+    page.appendChild(createPageFooter(title, index + 1, total));
     sheet.appendChild(page);
     pdfPreview.appendChild(sheet);
   });
@@ -715,24 +727,26 @@ function updatePreviewTitle(source, tokens) {
 
   previewTitle.textContent = title ? ` ${title}` : '';
   previewTitle.title = title || '';
+
+  return title;
 }
 
 function render() {
   const source = editor.value;
 
   if (typeof marked === 'undefined') {
-    updatePreviewTitle(source, null);
-    renderPages(`<p>${escapeHtml(source).replace(/\n/g, '<br>')}</p>`);
+    const title = updatePreviewTitle(source, null);
+    renderPages(`<p>${escapeHtml(source).replace(/\n/g, '<br>')}</p>`, title);
     return;
   }
 
   const tokens = marked.lexer(source);
-  updatePreviewTitle(source, tokens);
-  renderPages(tokensToHtml(tokens));
+  const title = updatePreviewTitle(source, tokens);
+  renderPages(tokensToHtml(tokens), title);
 }
 
 function showError(file, err) {
-  renderPages(`<p class="hint">No se pudo leer <strong>${escapeHtml(file.path)}</strong>.<br>Detalle: ${escapeHtml(err.message)}</p>`);
+  renderPages(`<p class="hint">No se pudo leer <strong>${escapeHtml(file.path)}</strong>.<br>Detalle: ${escapeHtml(err.message)}</p>`, file.name);
 }
 
 async function loadDoc(file, btn) {

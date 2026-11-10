@@ -20,7 +20,7 @@
 
 html {
     accent-color: var(--main-clr);
-    font-family: 'Poppins', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
 }
 
 * {
@@ -29,7 +29,7 @@ html {
 
 body {
     margin: 0;
-    height: 100vh;
+    height: 100dvh;
     display: grid;
     grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
     background: var(--bg);
@@ -234,7 +234,7 @@ aside .pane-header h1 {
     transition: transform .15s;
 }
 
-.tree-dir.collapsed > .tree-dir-toggle .tree-chevron {
+.tree-dir.collapsed>.tree-dir-toggle .tree-chevron {
     transform: rotate(-90deg);
 }
 
@@ -253,7 +253,7 @@ aside .pane-header h1 {
     list-style: none;
 }
 
-.tree-dir.collapsed > .tree-children {
+.tree-dir.collapsed>.tree-children {
     display: none;
 }
 
@@ -569,22 +569,22 @@ aside .pane-header h1 {
     pointer-events: none;
 }
 
-/* Numeración de cada hoja */
-.pdf-preview.grid .pdf-sheet::before {
-    content: "Hoja " attr(data-page);
+/* Pie de cada hoja: nomenclatura del documento + numeración */
+.pdf-sheet-footer {
     position: absolute;
     left: var(--page-margin);
     right: var(--page-margin);
     bottom: 0;
     height: var(--page-margin);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    line-height: var(--page-margin);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: right;
     font-size: .68rem;
-    font-weight: 600;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--guide-clr);
+    font-weight: 500;
+    letter-spacing: .03em;
+    color: var(--muted);
     pointer-events: none;
     z-index: 1;
 }
@@ -657,7 +657,6 @@ aside .pane-header h1 {
     }
 
     .pdf-preview.grid .pdf-page::after,
-    .pdf-preview.grid .pdf-sheet::before,
     .pdf-preview.grid .pdf-sheet::after {
         display: none;
     }

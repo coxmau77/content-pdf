@@ -24,14 +24,6 @@ Para crear una página web básica en HTML necesitarás al menos las siguientes 
 </html>
 ```
 
-
-
-
-
-
-
-
-
 Al leer el código, el _browser_ interpreta: 
 
 - La declaración `DOCTYPE` le avisa al navegador que el documento que va a leer es HTML.
@@ -52,9 +44,6 @@ Al leer el código, el _browser_ interpreta:
 Según las reglas prescritas de HTML, un _browser_ lee el código de una página y entiende qué contenido tiene que mostrar al usuario y de qué forma.
 
 +++
-
-
-
 
 
 
