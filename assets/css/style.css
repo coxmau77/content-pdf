@@ -643,14 +643,12 @@ aside .pane-header h1 {
     display: block;
 }
 
-/* El codigo dentro de code-block__pre debe estar siempre visible dentro de su contenedor no debe producirse el overflow */
-
 .pdf-content .code-block__pre {
     flex: 1 1 auto;
     min-width: 0;
     margin: 0;
     padding: 10px 12px 10px 10px;
-    overflow-x: auto;
+    overflow-x: hidden;
     border-radius: 0;
     background: transparent;
 }
@@ -663,7 +661,8 @@ aside .pane-header h1 {
     font-family: var(--code-font);
     font-size: .82em;
     line-height: 1.5;
-    white-space: pre;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 /* Tema VS Code Dark+ para highlight.js */
