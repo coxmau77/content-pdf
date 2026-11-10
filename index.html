@@ -46,6 +46,19 @@
             <path d="M8 13h8M8 17h8M8 9h2" />
           </svg>
         </button>
+        <button class="icon-btn" type="button" popovertarget="actions-popover" aria-label="Abrir opciones adicionales"
+          title="Más opciones">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+            <circle cx="5" cy="12" r="1.7" />
+            <circle cx="12" cy="12" r="1.7" />
+            <circle cx="19" cy="12" r="1.7" />
+          </svg>
+        </button>
+        <div id="actions-popover" popover>
+          <div class="popover-header">Insertar sintaxis</div>
+          <ul class="action-options" id="action-options" aria-label="Copiar sintaxis Markdown"></ul>
+          <div id="copy-feedback" class="copy-feedback" role="status" aria-live="polite"></div>
+        </div>
       </div>
       <input type="file" id="folder-input" webkitdirectory multiple hidden>
       <div id="docs-popover" popover>

@@ -3,6 +3,7 @@ const A4_WIDTH_PX = (210 / 25.4) * 96;
 const PREFS_KEY = 'content-pdf:prefs';
 const LAST_DOC_KEY = 'content-pdf:last-doc';
 const DEFAULT_PREFS = { fontSize: '12px', margin: '20mm', grid: false };
+const VIDEO_DESCRIPTION_PREVIEW_LIMIT = 180;
 
 const DOC_ICON = `
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
@@ -17,6 +18,8 @@ const pdfPreview = document.getElementById('pdf-preview');
 const previewWrap = document.querySelector('.preview-wrap');
 const docsList = document.getElementById('docs-list');
 const docsPopover = document.getElementById('docs-popover');
+const actionOptions = document.getElementById('action-options');
+const copyFeedback = document.getElementById('copy-feedback');
 const optionsPopover = document.getElementById('options-popover');
 const fontSelect = document.getElementById('font-size');
 const marginSelect = document.getElementById('margin-size');
@@ -44,6 +47,35 @@ let savedText = '';
 let dirty = false;
 let reconnectPending = false;
 const fileHandles = new Map();
+
+const COPY_TEMPLATES = {
+  image: '<img src="url-de-la-imagen" alt="texto alternativo">',
+  video: `<a class="video-card" href="https://www.youtube.com/watch?v=HMHbOUk4zKs" target="_blank" rel="noopener noreferrer" data-video-card>
+    <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
+    <span class="video-card__play" aria-hidden="true">▶</span>
+    </div>
+    <div class="video-card__details">
+    <p class="video-card__eyebrow">Video</p>
+    <h3 class="video-card__title" data-video-title>Cargando título...</h3>
+    <p class="video-card__metadata">
+      <span data-video-author>Cargando información...</span>
+      <span data-video-provider></span>
+    </p>
+    <p class="video-card__description" data-video-description>Escribe aquí un resumen introductorio del video.</p>
+    </div>
+</a>`,
+  link: '<a href="url-del-enlace" target="_blank" rel="noopener noreferrer">texto del enlace</a>',
+  horizontalLine: '<hr>',
+};
+
+const COPY_ACTION_ICONS = {
+  image: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>',
+  video: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m10 9 5 3-5 3z" /></svg>',
+  link: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l3-3A5 5 0 0 0 13 2.93l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.07 0l-3 3A5 5 0 0 0 11 21.07l1.71-1.71" /></svg>',
+};
+
+const COPY_ICON = '<svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></svg>';
+const DEFAULT_COPY_ACTION_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5h8M8 12h8M8 19h8" /></svg>';
 
 function debounce(fn, wait) {
   let timer;
@@ -749,7 +781,7 @@ function createPageFooter(title, current, total) {
 }
 
 function renderPages(html, title = '') {
-  const pages = paginate(decorateCodeBlocks(html));
+  const pages = paginate(decorateCodeBlocks(addExternalLinkAttributes(html)));
   const total = pages.length;
 
   pdfPreview.innerHTML = '';
@@ -763,7 +795,88 @@ function renderPages(html, title = '') {
   });
 
   highlightCodeBlocks(pdfPreview);
+  initVideoCardMetadata(pdfPreview);
   scheduleImageReflow();
+}
+
+function getYouTubeVideoId(value) {
+  try {
+    const url = new URL(value, document.baseURI);
+    if (url.hostname === 'youtu.be') return url.pathname.slice(1).split('/')[0] || null;
+    if (!['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com'].includes(url.hostname)) return null;
+
+    if (url.pathname === '/watch') return url.searchParams.get('v');
+    const match = url.pathname.match(/^\/(?:embed|shorts|live)\/([^/?]+)/);
+    return match ? match[1] : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function initVideoCardMetadata(root) {
+  root.querySelectorAll('[data-video-card]').forEach((card) => {
+    const thumbnail = card.querySelector('.video-card__thumbnail-wrap');
+    const title = card.querySelector('[data-video-title]');
+    const author = card.querySelector('[data-video-author]');
+    const provider = card.querySelector('[data-video-provider]');
+    const description = card.querySelector('[data-video-description]');
+    if (!thumbnail || !title || !author || !provider) return;
+
+    if (description) {
+      const text = description.textContent.trim().replace(/\s+/g, ' ');
+      if (text.length > VIDEO_DESCRIPTION_PREVIEW_LIMIT) {
+        description.textContent = `${text.slice(0, VIDEO_DESCRIPTION_PREVIEW_LIMIT - 1).trimEnd()}…`;
+      } else {
+        description.textContent = text;
+      }
+    }
+
+    const videoId = getYouTubeVideoId(card.href);
+    if (videoId) {
+      thumbnail.style.backgroundImage = `url("https://img.youtube.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg")`;
+    }
+
+    loadVideoCardMetadata(card, { thumbnail, title, author, provider });
+  });
+}
+
+async function loadVideoCardMetadata(card, elements) {
+  const { thumbnail, title, author, provider } = elements;
+  const endpoint = new URL('https://www.youtube.com/oembed');
+  endpoint.searchParams.set('url', card.href);
+  endpoint.searchParams.set('format', 'json');
+
+  try {
+    const response = await fetch(endpoint);
+    if (!response.ok) {
+      throw new Error(`YouTube respondió con estado ${response.status}.`);
+    }
+
+    const metadata = await response.json();
+    if (typeof metadata.title !== 'string' || typeof metadata.author_name !== 'string') {
+      throw new Error('YouTube no devolvió el título y el canal del video.');
+    }
+    if (!card.isConnected) return;
+
+    title.textContent = metadata.title;
+    author.textContent = metadata.author_name;
+    provider.textContent = metadata.provider_name || 'YouTube';
+    thumbnail.setAttribute('aria-label', `Miniatura del video ${metadata.title}`);
+
+    if (typeof metadata.thumbnail_url === 'string') {
+      const thumbnailUrl = new URL(metadata.thumbnail_url);
+      if (thumbnailUrl.protocol === 'https:') {
+        thumbnail.style.backgroundImage = `url("${thumbnailUrl.href}")`;
+      }
+    }
+  } catch (err) {
+    console.error('No se pudieron cargar los metadatos del video.', err);
+    if (!card.isConnected) return;
+
+    title.textContent = 'Título no disponible';
+    author.textContent = 'No se pudo cargar la información del video.';
+    provider.textContent = '';
+  }
 }
 
 /* ---------- Render ---------- */
@@ -882,6 +995,42 @@ function decorateCodeBlocks(html) {
 
     pre.parentNode.insertBefore(block, pre);
     body.appendChild(pre);
+  });
+
+  return template.innerHTML;
+}
+
+function isExternalHttpUrl(value) {
+  try {
+    const url = new URL(value, document.baseURI);
+    return ['http:', 'https:'].includes(url.protocol) && url.origin !== window.location.origin;
+  } catch (err) {
+    return false;
+  }
+}
+
+function addExternalLinkAttributes(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  template.content.querySelectorAll('a[href]').forEach((link) => {
+    if (!isExternalHttpUrl(link.getAttribute('href'))) return;
+
+    link.target = '_blank';
+    link.relList.add('noopener', 'noreferrer');
+  });
+
+  template.content.querySelectorAll('img[src]').forEach((image) => {
+    if (!isExternalHttpUrl(image.getAttribute('src'))) return;
+    if (image.closest('a')) return;
+
+    const link = document.createElement('a');
+    link.className = 'image-link';
+    link.href = image.src;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    image.parentNode.insertBefore(link, image);
+    link.appendChild(image);
   });
 
   return template.innerHTML;
@@ -1339,6 +1488,54 @@ function initFormatControls() {
   });
 }
 
+function initCopyActions() {
+  renderCopyActions();
+
+  actionOptions.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-copy-type]');
+    if (!button) return;
+
+    const template = COPY_TEMPLATES[button.dataset.copyType];
+    if (!template) return;
+
+    copyFeedback.classList.remove('is-error');
+    try {
+      await navigator.clipboard.writeText(template);
+      copyFeedback.textContent = `Sintaxis de ${button.dataset.copyLabel} copiada.`;
+    } catch (err) {
+      console.error('No se pudo copiar la sintaxis al portapapeles.', err);
+      copyFeedback.classList.add('is-error');
+      copyFeedback.textContent = 'No se pudo copiar. Revisá los permisos del navegador.';
+    }
+  });
+}
+
+function renderCopyActions() {
+  actionOptions.replaceChildren();
+
+  Object.entries(COPY_TEMPLATES).forEach(([type, template]) => {
+    const label = type.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase());
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.className = 'action-option';
+    button.type = 'button';
+    button.dataset.copyType = type;
+    button.dataset.copyLabel = label.toLowerCase();
+    button.setAttribute('aria-label', `Copiar ${label}`);
+
+    const icon = document.createElement('span');
+    icon.innerHTML = COPY_ACTION_ICONS[type] || DEFAULT_COPY_ACTION_ICON;
+
+    const text = document.createElement('span');
+    text.textContent = label;
+
+    button.append(icon, text);
+    button.insertAdjacentHTML('beforeend', COPY_ICON);
+    item.appendChild(button);
+    actionOptions.appendChild(item);
+  });
+}
+
 function showInitialState() {
   pickFolderBtn.classList.remove('is-active');
   editor.value = '';
@@ -1359,6 +1556,7 @@ function init() {
   }
 
   initFormatControls();
+  initCopyActions();
   initSaveControls();
 
   const renderDebounced = debounce(render, 150);

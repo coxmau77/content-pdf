@@ -1,6 +1,7 @@
 /* Utiliza siempre las variables CSS para definir colores y otros valores que se repiten en tu hoja de estilos. Esto facilita el mantenimiento y la consistencia del diseño. */
 :root {
-    --main-clr: tomato;
+    --main-clr: hotpink;
+    /* este color --main-clr-strong deberia ser más oscuro en base a --main-clr, con esto se logra un mejor dinamismo  dentro de CSS centralizado en el color principal utilizando color-mix */
     --main-clr-strong: #e04a2f;
     --bg: #eef0f3;
     --panel-bg: #ffffff;
@@ -203,6 +204,56 @@ aside .pane-header h1 {
     padding: 4px 8px 12px;
     overflow: auto;
     list-style: none;
+}
+
+/* Opciones adicionales */
+#actions-popover {
+    width: min(240px, 90vw);
+    padding-bottom: 4px;
+}
+
+.action-options {
+    margin: 0;
+    padding: 4px 8px;
+    list-style: none;
+}
+
+.action-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: .85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.action-option:hover,
+.action-option:focus-visible {
+    background: #f3f4f6;
+}
+
+.action-option .copy-icon {
+    margin-left: auto;
+    color: var(--muted);
+}
+
+.copy-feedback {
+    min-height: 1.25rem;
+    padding: 2px 16px 8px;
+    color: var(--muted);
+    font-size: .75rem;
+}
+
+.copy-feedback.is-error {
+    color: var(--main-clr-strong);
 }
 
 /* Árbol jerárquico de documentos */
@@ -506,6 +557,8 @@ aside .pane-header h1 {
 }
 
 /* ---------- Bloques de código estilo VS Code ---------- */
+/* El estilo deberia estar basado en --main-clr estilo template de alto contraste utilizando transparencias y opacidades basados en --main-clr y la versatilidad que brinda color-mix para dar luz o dar oscuridad al color que ya tenemos definido, esto logra un gran dinamismo y simplificacion de estilos a nivel centralizado, profundo y profesional */
+
 .pdf-content .code-block {
     margin: .9em 0;
     overflow: hidden;
@@ -725,8 +778,124 @@ aside .pane-header h1 {
 }
 
 .pdf-content img {
+    display: block;
+    width: 100%;
     max-width: 100%;
     height: auto;
+    margin: .65em auto;
+}
+
+.pdf-content a.video-card {
+    display: grid;
+    grid-template-columns: min(198px, 45%) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+    height: 200px;
+    max-height: 200px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--main-clr) 24%, white);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--main-clr) 8%, white);
+    color: var(--text);
+    text-decoration: none;
+    break-inside: avoid;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    overflow: hidden;
+}
+
+.pdf-content a.video-card:hover,
+.pdf-content a.video-card:focus-visible {
+    border-color: color-mix(in srgb, var(--main-clr) 40%, white);
+    background: color-mix(in srgb, var(--main-clr) 12%, white);
+}
+
+.pdf-content .video-card__thumbnail-wrap {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #111827;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.pdf-content .video-card__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    width: 48px;
+    height: 34px;
+    place-items: center;
+    border-radius: 9px;
+    background: rgba(220, 38, 38, .92);
+    color: #fff;
+    font-size: 1.1em;
+    transform: translate(-50%, -50%);
+}
+
+.pdf-content .video-card__details {
+    min-width: 0;
+    padding: 1em;
+}
+
+.pdf-content .video-card__eyebrow {
+    margin: 0 0 .35em;
+    color: var(--muted);
+    font-size: .75em;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.pdf-content .video-card__title {
+    display: -webkit-box;
+    margin: 0 0 .5em;
+    overflow-wrap: anywhere;
+    overflow: hidden;
+    font-size: 1.15em;
+    line-height: 1.3;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.pdf-content .video-card__metadata {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    gap: .35em .8em;
+    margin: 0 0 .65em;
+    color: var(--muted);
+    font-size: .8em;
+}
+
+.pdf-content .video-card__metadata>span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pdf-content .video-card__description {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: var(--text);
+    font-size: .82em;
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.pdf-content .video-card__details>a {
+    font-size: .85em;
+}
+
+.pdf-content a.image-link {
+    display: block;
 }
 
 .pdf-content a {

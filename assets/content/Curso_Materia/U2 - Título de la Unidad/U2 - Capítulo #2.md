@@ -3,10 +3,62 @@
 
 lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
+<a class="video-card" href="https://youtu.be/ZwNeu833FXU?si=eZzIv-TiZHaTmDsX" target="_blank" rel="noopener noreferrer" data-video-card>
+    <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
+    <span class="video-card__play" aria-hidden="true">▶</span>
+    </div>
+    <div class="video-card__details">
+    <p class="video-card__eyebrow">Video</p>
+    <h3 class="video-card__title" data-video-title>Cargando título...</h3>
+    <p class="video-card__metadata">
+      <span data-video-author>Cargando información...</span>
+      <span data-video-provider></span>
+    </p>
+    </div>
+</a>
+<hr>
+<a class="video-card" href="https://youtu.be/ZwNeu833FXU?si=eZzIv-TiZHaTmDsX" target="_blank" rel="noopener noreferrer" data-video-card>
+    <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
+    <span class="video-card__play" aria-hidden="true">▶</span>
+    </div>
+    <div class="video-card__details">
+    <p class="video-card__eyebrow">Video</p>
+    <h3 class="video-card__title" data-video-title>Cargando título...</h3>
+    <p class="video-card__metadata">
+      <span data-video-author>Cargando información...</span>
+      <span data-video-provider></span>
+    </p>
+    <p class="video-card__description" data-video-description>Escribe aquí un resumen introductorio del video.</p>
+    </div>
+</a>
+<hr>
+<a class="video-card" href="https://youtu.be/I2K_VeNi1Nk?si=CviRDlxbI0Zvcemy" target="_blank" rel="noopener noreferrer" data-video-card>
+    <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
+    <span class="video-card__play" aria-hidden="true">▶</span>
+    </div>
+    <div class="video-card__details">
+    <p class="video-card__eyebrow">Video</p>
+    <h3 class="video-card__title" data-video-title>Cargando título...</h3>
+    <p class="video-card__metadata">
+      <span data-video-author>Cargando información...</span>
+      <span data-video-provider></span>
+    </p>
+    </div>
+</a>
+
+
 ### Estructura HTML Y Etiquetas `<h1>` y `<p>`
 
 ## 1. Estructura HTML
 
+<img src="url-de-la-imagen" alt="texto alternativo">
+<hr>
+<hr>
+<hr>
+<a href="url-del-video" target="_blank" rel="noopener noreferrer"><video controls src="url-del-video"></video></a>
+
+<a href="url-del-enlace" target="_blank" rel="noopener noreferrer">texto del enlace</a>
+<hr>
 Empezá por este video:
 
 <iframe width="600" height="355" src="https://www.youtube.com/embed/HMHbOUk4zKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -26,14 +78,11 @@ Para crear una página web básica en HTML necesitarás al menos las siguientes 
 </html>
 ```
 
+
 ```js
 // Comentarios en JavaScript
 console.log("Hola mundo!");
 ```
-
-
-
-
 
 ```css
 /*Comentarios en css*/
