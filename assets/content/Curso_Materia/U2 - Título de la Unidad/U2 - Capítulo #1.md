@@ -24,6 +24,14 @@ Para crear una página web básica en HTML necesitarás al menos las siguientes 
 </html>
 ```
 
+
+
+
+
+
+
+
+
 Al leer el código, el _browser_ interpreta: 
 
 - La declaración `DOCTYPE` le avisa al navegador que el documento que va a leer es HTML.

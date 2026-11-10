@@ -75,6 +75,14 @@ aside .pane-header {
     font-weight: 600;
 }
 
+aside .pane-header h1 {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 .pane-title {
     display: flex;
     align-items: baseline;
@@ -188,13 +196,65 @@ aside .pane-header {
     list-style: none;
 }
 
-#docs-list .unit-title {
-    padding: 10px 8px 4px;
-    font-size: .72rem;
-    font-weight: 600;
-    letter-spacing: .05em;
-    text-transform: uppercase;
+/* Árbol jerárquico de documentos */
+.tree-dir-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 7px 8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
     color: var(--muted);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.tree-dir-toggle:hover {
+    background: #f3f4f6;
+    color: var(--text);
+}
+
+.tree-dir-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.tree-chevron {
+    display: inline-flex;
+    align-items: center;
+    transition: transform .15s;
+}
+
+.tree-dir.collapsed > .tree-dir-toggle .tree-chevron {
+    transform: rotate(-90deg);
+}
+
+.tree-count {
+    font-size: .68rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: #f3f4f6;
+    border-radius: 99px;
+    padding: 1px 7px;
+}
+
+.tree-children {
+    margin: 0;
+    padding-left: 14px;
+    list-style: none;
+}
+
+.tree-dir.collapsed > .tree-children {
+    display: none;
 }
 
 .doc-btn {

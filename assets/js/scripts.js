@@ -27,6 +27,7 @@ const folderInput = document.getElementById('folder-input');
 const folderInfo = document.getElementById('folder-info');
 const docsPopoverTitle = document.getElementById('docs-popover-title');
 const saveBtn = document.getElementById('save-doc');
+const previewTitle = document.getElementById('preview-title');
 
 const measureHost = document.createElement('div');
 measureHost.className = 'pdf-preview pdf-measure';
@@ -41,6 +42,7 @@ const docButtons = new Map();
 let currentDoc = null;
 let savedText = '';
 let dirty = false;
+let reconnectPending = false;
 const fileHandles = new Map();
 
 function debounce(fn, wait) {
@@ -123,6 +125,62 @@ function saveLastDoc(path) {
   }
 }
 
+/* ---------- Sesión de carpeta (IndexedDB) ---------- */
+function openHandlesDb() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('IndexedDB no disponible'));
+      return;
+    }
+
+    const request = indexedDB.open('content-pdf-session', 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains('handles')) {
+        request.result.createObjectStore('handles');
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('No se pudo abrir IndexedDB'));
+  });
+}
+
+function requestFromStore(db, mode, action) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', mode);
+    const request = action(tx.objectStore('handles'));
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+async function saveFolderHandle(handle) {
+  let db = null;
+
+  try {
+    db = await openHandlesDb();
+    await requestFromStore(db, 'readwrite', (store) => store.put(handle, 'folder'));
+  } catch (err) {
+    /* IndexedDB no disponible: la sesión no persiste */
+  } finally {
+    if (db) db.close();
+  }
+}
+
+async function loadFolderHandle() {
+  let db = null;
+
+  try {
+    db = await openHandlesDb();
+    const handle = await requestFromStore(db, 'readonly', (store) => store.get('folder'));
+    return handle || null;
+  } catch (err) {
+    return null;
+  } finally {
+    if (db) db.close();
+  }
+}
+
 /* ---------- Documentos ---------- */
 function findDocByPath(path) {
   if (!path) return null;
@@ -148,14 +206,12 @@ function formatDocName(name) {
     .replace(/(^|\s)(\p{L})/gu, (match, prefix, char) => prefix + char.toUpperCase());
 }
 
-function buildDocsFromFiles(files) {
+function buildDocsFromEntries(entries) {
   const groupsMap = new Map();
   let rootName = '';
 
-  files.forEach((file) => {
-    if (!isMarkdown(file.name)) return;
-
-    const relativePath = file.webkitRelativePath || file.name;
+  entries.forEach((entry) => {
+    const relativePath = entry.relativePath || entry.file.name;
     const segments = relativePath.split('/');
     rootName = rootName || segments[0];
 
@@ -173,9 +229,10 @@ function buildDocsFromFiles(files) {
     }
 
     groupsMap.get(parentPath).files.push({
-      name: formatDocName(file.name),
-      path: base.join('/') || file.name,
-      file,
+      name: formatDocName(entry.file.name),
+      path: base.join('/') || entry.file.name,
+      file: entry.file,
+      handle: entry.handle || null,
     });
   });
 
@@ -200,42 +257,148 @@ function setActive(btn) {
   if (activeBtn) activeBtn.classList.add('active');
 }
 
+function buildDocsTree() {
+  const root = { dirs: new Map(), files: [] };
+
+  DOCS.forEach((group) => {
+    const segments = group.key === 'General' ? [] : group.key.split('/');
+    let node = root;
+
+    segments.forEach((segment) => {
+      if (!node.dirs.has(segment)) {
+        node.dirs.set(segment, { dirs: new Map(), files: [] });
+      }
+      node = node.dirs.get(segment);
+    });
+
+    node.files.push(...group.files);
+  });
+
+  return root;
+}
+
+function countTreeFiles(node) {
+  let total = node.files.length;
+  node.dirs.forEach((child) => {
+    total += countTreeFiles(child);
+  });
+  return total;
+}
+
+const DIR_ICON = `
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+  </svg>`;
+
+const CHEVRON_ICON = `
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="6 9 12 15 18 9" />
+  </svg>`;
+
+function buildTreeListNode(parentPath, name, node) {
+  const item = document.createElement('li');
+  item.className = 'tree-dir';
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'tree-dir-toggle';
+  toggle.setAttribute('aria-expanded', 'true');
+
+  const chevron = document.createElement('span');
+  chevron.className = 'tree-chevron';
+  chevron.innerHTML = CHEVRON_ICON;
+
+  const label = document.createElement('span');
+  label.className = 'tree-dir-name';
+  label.textContent = name;
+
+  const count = document.createElement('span');
+  count.className = 'tree-count';
+  count.textContent = String(countTreeFiles(node));
+
+  toggle.appendChild(chevron);
+  toggle.appendChild(label);
+  toggle.appendChild(count);
+
+  const childPath = parentPath ? `${parentPath}/${name}` : name;
+  toggle.title = childPath;
+
+  toggle.addEventListener('click', () => {
+    const collapsed = item.classList.toggle('collapsed');
+    toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  });
+
+  item.appendChild(toggle);
+  item.appendChild(buildTreeChildren(childPath, node));
+
+  return item;
+}
+
+function buildTreeChildren(parentPath, node) {
+  const children = document.createElement('ul');
+  children.className = 'tree-children';
+
+  Array.from(node.dirs.keys())
+    .sort((a, b) => a.localeCompare(b, 'es', { numeric: true }))
+    .forEach((name) => {
+      children.appendChild(buildTreeListNode(parentPath, name, node.dirs.get(name)));
+    });
+
+  node.files
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { numeric: true }))
+    .forEach((file) => {
+      children.appendChild(buildDocListNode(file));
+    });
+
+  return children;
+}
+
+function buildDocListNode(file) {
+  const item = document.createElement('li');
+  const btn = document.createElement('button');
+  const label = document.createElement('span');
+
+  btn.type = 'button';
+  btn.className = 'doc-btn';
+  btn.innerHTML = DOC_ICON;
+  label.textContent = file.name;
+  btn.appendChild(label);
+
+  btn.addEventListener('click', () => {
+    if (!confirmDiscardChanges()) return;
+
+    loadDoc(file, btn);
+    if (docsPopover && typeof docsPopover.hidePopover === 'function') {
+      docsPopover.hidePopover();
+    }
+  });
+
+  item.appendChild(btn);
+  docButtons.set(file.path, btn);
+  return item;
+}
+
 function buildDocsList() {
   docsList.innerHTML = '';
   docButtons.clear();
 
-  DOCS.forEach((group) => {
-    const groupTitle = document.createElement('li');
-    groupTitle.className = 'unit-title';
-    groupTitle.textContent = group.unit;
-    groupTitle.title = group.key;
-    docsList.appendChild(groupTitle);
+  const root = buildDocsTree();
 
-    group.files.forEach((file) => {
-      const item = document.createElement('li');
-      const btn = document.createElement('button');
-      const label = document.createElement('span');
-
-      btn.type = 'button';
-      btn.className = 'doc-btn';
-      btn.innerHTML = DOC_ICON;
-      label.textContent = file.name;
-      btn.appendChild(label);
-
-      btn.addEventListener('click', () => {
-        if (!confirmDiscardChanges()) return;
-
-        loadDoc(file, btn);
-        if (docsPopover && typeof docsPopover.hidePopover === 'function') {
-          docsPopover.hidePopover();
-        }
-      });
-
-      item.appendChild(btn);
-      docsList.appendChild(item);
-      docButtons.set(file.path, btn);
+  Array.from(root.dirs.keys())
+    .sort((a, b) => a.localeCompare(b, 'es', { numeric: true }))
+    .forEach((name) => {
+      docsList.appendChild(buildTreeListNode('', name, root.dirs.get(name)));
     });
-  });
+
+  root.files
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { numeric: true }))
+    .forEach((file) => {
+      docsList.appendChild(buildDocListNode(file));
+    });
 }
 
 /* ---------- Paginación A4 ---------- */
@@ -276,6 +439,10 @@ function toTopLevelNodes(html) {
   return Array.from(template.content.childNodes).filter(
     (node) => node.nodeType !== Node.TEXT_NODE || node.textContent.trim() !== ''
   );
+}
+
+function isGapNode(node) {
+  return node.nodeType === Node.ELEMENT_NODE && node.classList.contains('gap');
 }
 
 function buildListFragment(list, item, index) {
@@ -405,6 +572,9 @@ function paginate(html) {
 
   while (queue.length) {
     const node = queue.shift();
+
+    if (isGapNode(node) && current.content.childNodes.length === 0) continue;
+
     current.content.appendChild(node);
 
     if (!isOverflowing(current.content)) continue;
@@ -480,15 +650,85 @@ function renderPages(html) {
 }
 
 /* ---------- Render ---------- */
+const GAP_LINE_EM = 1.65;
+
+function countNewlines(value) {
+  return (value.match(/\n/g) || []).length;
+}
+
+function buildGapHtml(blankLines) {
+  const extraLines = Math.max(0, blankLines - 1);
+  if (extraLines < 1) return '';
+
+  const heightEm = (extraLines * GAP_LINE_EM).toFixed(2);
+  return `<div class="gap" style="height:${heightEm}em" aria-hidden="true"></div>`;
+}
+
+function trailingBlankLines(raw) {
+  const tail = raw.match(/\s*$/)[0];
+  return Math.max(0, countNewlines(tail) - 1);
+}
+
+function spaceBlankLines(raw, previous) {
+  const lineBreakAbsorbed = Boolean(previous) && previous.raw.endsWith('\n');
+  return Math.max(0, countNewlines(raw) - (lineBreakAbsorbed ? 0 : 1));
+}
+
+function tokensToHtml(tokens) {
+  let html = '';
+  let previous = null;
+
+  tokens.forEach((token) => {
+    if (token.type === 'space') {
+      html += buildGapHtml(spaceBlankLines(token.raw, previous));
+      return;
+    }
+
+    const single = [token];
+    single.links = tokens.links;
+    html += marked.parser(single);
+    html += buildGapHtml(trailingBlankLines(token.raw));
+    previous = token;
+  });
+
+  return html;
+}
+
+function inlineToPlainText(raw) {
+  const template = document.createElement('template');
+  template.innerHTML = marked.parseInline(raw);
+  return template.content.textContent.trim();
+}
+
+function updatePreviewTitle(source, tokens) {
+  let title = null;
+
+  if (tokens) {
+    const heading = tokens.find((token) => token.type === 'heading' && token.depth === 1);
+    if (heading) title = inlineToPlainText(heading.text);
+  } else {
+    const match = source.match(/^[ \t]*#[ \t]+(.+?)[ \t]*$/m);
+    if (match) title = match[1].trim();
+  }
+
+  if (!title && currentDoc) title = currentDoc.name;
+
+  previewTitle.textContent = title ? ` ${title}` : '';
+  previewTitle.title = title || '';
+}
+
 function render() {
   const source = editor.value;
 
   if (typeof marked === 'undefined') {
+    updatePreviewTitle(source, null);
     renderPages(`<p>${escapeHtml(source).replace(/\n/g, '<br>')}</p>`);
     return;
   }
 
-  renderPages(marked.parse(source));
+  const tokens = marked.lexer(source);
+  updatePreviewTitle(source, tokens);
+  renderPages(tokensToHtml(tokens));
 }
 
 function showError(file, err) {
@@ -625,7 +865,38 @@ function showEmptyState(rootName) {
   editor.placeholder = 'No hay documentos .md en la carpeta seleccionada.';
   folderInfo.textContent = rootName ? `${rootName} · sin .md` : 'Sin documentos';
   docsPopoverTitle.textContent = rootName || 'Sin documentos';
+  previewTitle.textContent = '';
+  previewTitle.title = '';
   renderPages('<p class="hint">La carpeta seleccionada no contiene documentos <code>.md</code>.</p>');
+}
+
+function applyDocs(result) {
+  DOCS = result.groups;
+  reconnectPending = false;
+  fileHandles.clear();
+  DOCS.forEach((group) => {
+    group.files.forEach((doc) => {
+      if (doc.handle) fileHandles.set(doc.path, doc.handle);
+    });
+  });
+  activeBtn = null;
+  buildDocsList();
+
+  const total = DOCS.reduce((sum, group) => sum + group.files.length, 0);
+  pickFolderBtn.classList.toggle('is-active', total > 0);
+
+  if (!total) {
+    showEmptyState(result.rootName);
+    return;
+  }
+
+  folderInfo.textContent = `${result.rootName} · ${total} documento${total === 1 ? '' : 's'}`;
+  docsPopoverTitle.textContent = result.rootName || 'Documentos';
+
+  const lastFile = findDocByPath(getLastDocPath());
+  const startFile = lastFile || DOCS[0].files[0];
+  const startBtn = docButtons.get(startFile.path) || null;
+  loadDoc(startFile, startBtn);
 }
 
 function handleFolderSelection(event) {
@@ -636,28 +907,162 @@ function handleFolderSelection(event) {
 
   const files = Array.from(event.target.files || []);
   event.target.value = '';
-  pickFolderBtn.classList.toggle('is-active', files.length > 0);
 
-  const { groups, rootName } = buildDocsFromFiles(files);
-  DOCS = groups;
-  fileHandles.clear();
-  activeBtn = null;
-  buildDocsList();
+  applyDocs(buildDocsFromEntries(files.map((file) => ({
+    file,
+    relativePath: file.webkitRelativePath || file.name,
+    handle: null,
+  }))));
+}
 
-  const total = DOCS.reduce((sum, group) => sum + group.files.length, 0);
+function supportsDirectoryPicker() {
+  return typeof window.showDirectoryPicker === 'function';
+}
 
-  if (!total) {
-    showEmptyState(rootName);
+async function resolveContentRoot(dirHandle) {
+  try {
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind === 'directory' && entry.name.toLowerCase() === 'content') {
+        return entry;
+      }
+    }
+  } catch (err) {
+    /* sin acceso a la estructura: se usa la carpeta elegida */
+  }
+  return dirHandle;
+}
+
+async function collectDocsFromDirectory(dirHandle, prefix, entries) {
+  for await (const entry of dirHandle.values()) {
+    if (entry.kind === 'directory') {
+      await collectDocsFromDirectory(entry, `${prefix}${entry.name}/`, entries);
+      continue;
+    }
+    if (!isMarkdown(entry.name)) continue;
+
+    try {
+      entries.push({
+        file: await entry.getFile(),
+        relativePath: `${prefix}${entry.name}`,
+        handle: entry,
+      });
+    } catch (err) {
+      /* archivo ilegible: se omite */
+    }
+  }
+  return entries;
+}
+
+async function loadDocsFromHandle(dirHandle) {
+  const rootHandle = await resolveContentRoot(dirHandle);
+  const entries = await collectDocsFromDirectory(rootHandle, `${dirHandle.name}/`, []);
+  applyDocs(buildDocsFromEntries(entries));
+  await saveFolderHandle(dirHandle);
+}
+
+async function pickDirectory(storedHandle) {
+  try {
+    return await window.showDirectoryPicker({
+      mode: 'readwrite',
+      startIn: storedHandle || undefined,
+    });
+  } catch (err) {
+    if (err && err.name === 'AbortError') return null;
+    throw err;
+  }
+}
+
+async function loadFolderViaPicker() {
+  if (!confirmDiscardChanges()) return;
+
+  const storedHandle = await loadFolderHandle();
+
+  if (reconnectPending && storedHandle && typeof storedHandle.queryPermission === 'function') {
+    let permission = 'prompt';
+
+    try {
+      permission = await storedHandle.queryPermission({ mode: 'readwrite' });
+    } catch (err) {
+      permission = 'prompt';
+    }
+
+    if (permission !== 'granted') {
+      try {
+        permission = await storedHandle.requestPermission({ mode: 'readwrite' });
+      } catch (err) {
+        permission = 'denied';
+      }
+    }
+
+    if (permission === 'granted') {
+      try {
+        await loadDocsFromHandle(storedHandle);
+        return;
+      } catch (err) {
+        /* la carpeta guardada ya no es accesible: se elige otra */
+      }
+    }
+  }
+
+  let dirHandle;
+
+  try {
+    dirHandle = await pickDirectory(storedHandle);
+  } catch (err) {
+    folderInput.click();
     return;
   }
 
-  folderInfo.textContent = `${rootName} · ${total} documento${total === 1 ? '' : 's'}`;
-  docsPopoverTitle.textContent = rootName || 'Documentos';
+  if (dirHandle) await loadDocsFromHandle(dirHandle);
+}
 
-  const lastFile = findDocByPath(getLastDocPath());
-  const startFile = lastFile || DOCS[0].files[0];
-  const startBtn = docButtons.get(startFile.path) || null;
-  loadDoc(startFile, startBtn);
+async function restoreSession() {
+  if (!supportsDirectoryPicker()) {
+    showInitialState();
+    return;
+  }
+
+  const storedHandle = await loadFolderHandle();
+
+  if (!storedHandle || typeof storedHandle.queryPermission !== 'function') {
+    showInitialState();
+    return;
+  }
+
+  let permission = 'prompt';
+  try {
+    permission = await storedHandle.queryPermission({ mode: 'readwrite' });
+  } catch (err) {
+    showInitialState();
+    return;
+  }
+
+  if (permission === 'granted') {
+    try {
+      await loadDocsFromHandle(storedHandle);
+      return;
+    } catch (err) {
+      showInitialState();
+      return;
+    }
+  }
+
+  showReconnectState();
+}
+
+function showReconnectState() {
+  editor.value = '';
+  currentDoc = null;
+  savedText = '';
+  setDirty(false);
+  reconnectPending = true;
+  editor.placeholder = 'Hacé click en el ícono de carpeta para reconectar tu sesión...';
+  folderInfo.textContent = 'Sesión guardada';
+  docsPopoverTitle.textContent = 'Sesión guardada';
+  previewTitle.textContent = '';
+  previewTitle.title = '';
+  pickFolderBtn.classList.add('is-active');
+  renderPages('<p class="hint">Hay una sesión guardada. Hacé click en el ícono de carpeta para reconectar la carpeta <code>content</code> y continuar donde lo dejaste. Si preferís cambiar de carpeta, cancelá el permiso y elegí otra en el selector.</p>');
 }
 
 /* ---------- Previsualización / opciones ---------- */
@@ -707,7 +1112,9 @@ function showInitialState() {
   editor.placeholder = 'Seleccioná la carpeta de contenido (.md) para comenzar...';
   folderInfo.textContent = 'Sin carpeta';
   docsPopoverTitle.textContent = 'Sin carpeta';
-  renderPages('<p class="hint">Hacé click en el ícono de carpeta y elegí la carpeta <code>content</code> (o <code>assets/content</code>) para cargar los documentos.</p>');
+  previewTitle.textContent = '';
+  previewTitle.title = '';
+  renderPages('<p class="hint">Hacé click en el ícono de carpeta y elegí la carpeta que contiene tu directorio <code>content</code> para cargar los documentos.</p>');
 }
 
 function init() {
@@ -740,10 +1147,16 @@ function init() {
   }
   fitPreview();
 
-  pickFolderBtn.addEventListener('click', () => folderInput.click());
+  pickFolderBtn.addEventListener('click', () => {
+    if (supportsDirectoryPicker()) {
+      loadFolderViaPicker();
+      return;
+    }
+    folderInput.click();
+  });
   folderInput.addEventListener('change', handleFolderSelection);
 
-  showInitialState();
+  restoreSession();
 }
 
 document.addEventListener('DOMContentLoaded', init);
