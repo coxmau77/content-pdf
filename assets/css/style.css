@@ -1,8 +1,7 @@
 /* Utiliza siempre las variables CSS para definir colores y otros valores que se repiten en tu hoja de estilos. Esto facilita el mantenimiento y la consistencia del diseño. */
 :root {
-    --main-clr: hotpink;
-    /* este color --main-clr-strong deberia ser más oscuro en base a --main-clr, con esto se logra un mejor dinamismo  dentro de CSS centralizado en el color principal utilizando color-mix */
-    --main-clr-strong: #e04a2f;
+    --main-clr: oklab(72.828% 0.19519 -0.02754);
+    --main-clr-strong: color-mix(in oklab, var(--main-clr) 80%, black);
     --bg: #eef0f3;
     --panel-bg: #ffffff;
     --text: #1f2937;
@@ -18,13 +17,20 @@
     --radius: 10px;
     --shadow: 0 12px 32px rgba(15, 23, 42, .16);
 
-    /* Bloques de código estilo VS Code Dark+ */
-    --code-bg: #1e1e1e;
-    --code-bar-bg: #252526;
-    --code-border: #2d2d30;
-    --code-text: #d4d4d4;
-    --code-muted: #858585;
-    --code-gutter: #6e7681;
+    --code-bg: color-mix(in oklab, #111827 88%, var(--main-clr));
+    --code-bar-bg: color-mix(in oklab, var(--code-bg) 82%, var(--main-clr));
+    --code-border: color-mix(in oklab, var(--code-bg) 60%, var(--main-clr));
+    --code-text: color-mix(in oklab, #d4d4d4 80%, var(--main-clr));
+    --code-muted: color-mix(in oklab, #b0b0b0 80%, var(--main-clr));
+    --code-gutter: color-mix(in oklab, #b0b0b0 80%, var(--main-clr));
+    --code-comment: color-mix(in oklab, #6a9955 80%, var(--main-clr));
+    --code-keyword: color-mix(in oklab, #569cd6 80%, var(--main-clr));
+    --code-string: color-mix(in oklab, #ce9178 80%, var(--main-clr));
+    --code-number: color-mix(in oklab, #b5cea8 80%, var(--main-clr));
+    --code-title: color-mix(in oklab, #dcdcaa 80%, var(--main-clr));
+    --code-variable: color-mix(in oklab, #9cdcfe 80%, var(--main-clr));
+    --code-type: color-mix(in oklab, #4ec9b0 80%, var(--main-clr));
+    --code-deletion: color-mix(in oklab, #f44747 70%, var(--main-clr));
     --code-font: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -556,8 +562,7 @@ aside .pane-header h1 {
     font-size: .9em;
 }
 
-/* ---------- Bloques de código estilo VS Code ---------- */
-/* El estilo deberia estar basado en --main-clr estilo template de alto contraste utilizando transparencias y opacidades basados en --main-clr y la versatilidad que brinda color-mix para dar luz o dar oscuridad al color que ya tenemos definido, esto logra un gran dinamismo y simplificacion de estilos a nivel centralizado, profundo y profesional */
+/* ---------- Bloques de código ---------- */
 
 .pdf-content .code-block {
     margin: .9em 0;
@@ -638,6 +643,8 @@ aside .pane-header h1 {
     display: block;
 }
 
+/* El codigo dentro de code-block__pre debe estar siempre visible dentro de su contenedor no debe producirse el overflow */
+
 .pdf-content .code-block__pre {
     flex: 1 1 auto;
     min-width: 0;
@@ -665,9 +672,11 @@ aside .pane-header h1 {
     color: var(--code-text);
 }
 
+/* Agregar un Tema VS Code Light+ para que el contraste sea mejor al imprimir */
+
 .pdf-content .code-block .hljs-comment,
 .pdf-content .code-block .hljs-quote {
-    color: #6a9955;
+    color: var(--code-comment);
     font-style: italic;
 }
 
@@ -676,25 +685,25 @@ aside .pane-header h1 {
 .pdf-content .code-block .hljs-literal,
 .pdf-content .code-block .hljs-doctag,
 .pdf-content .code-block .hljs-name {
-    color: #569cd6;
+    color: var(--code-keyword);
 }
 
 .pdf-content .code-block .hljs-string,
 .pdf-content .code-block .hljs-regexp,
 .pdf-content .code-block .hljs-addition,
 .pdf-content .code-block .hljs-template-tag {
-    color: #ce9178;
+    color: var(--code-string);
 }
 
 .pdf-content .code-block .hljs-number,
 .pdf-content .code-block .hljs-symbol,
 .pdf-content .code-block .hljs-bullet {
-    color: #b5cea8;
+    color: var(--code-number);
 }
 
 .pdf-content .code-block .hljs-title,
 .pdf-content .code-block .hljs-section {
-    color: #dcdcaa;
+    color: var(--code-title);
 }
 
 .pdf-content .code-block .hljs-variable,
@@ -706,30 +715,30 @@ aside .pane-header h1 {
 .pdf-content .code-block .hljs-selector-class,
 .pdf-content .code-block .hljs-selector-id,
 .pdf-content .code-block .hljs-selector-pseudo {
-    color: #9cdcfe;
+    color: var(--code-variable);
 }
 
 .pdf-content .code-block .hljs-type,
 .pdf-content .code-block .hljs-built_in,
 .pdf-content .code-block .hljs-title.class_ {
-    color: #4ec9b0;
+    color: var(--code-type);
 }
 
 .pdf-content .code-block .hljs-tag .hljs-name {
-    color: #569cd6;
+    color: var(--code-keyword);
 }
 
 .pdf-content .code-block .hljs-tag .hljs-attr {
-    color: #9cdcfe;
+    color: var(--code-variable);
 }
 
 .pdf-content .code-block .hljs-attribute {
-    color: #9cdcfe;
+    color: var(--code-variable);
 }
 
 .pdf-content .code-block .hljs-meta,
 .pdf-content .code-block .hljs-meta .hljs-keyword {
-    color: #569cd6;
+    color: var(--code-keyword);
 }
 
 .pdf-content .code-block .hljs-operator,
@@ -738,11 +747,11 @@ aside .pane-header h1 {
 }
 
 .pdf-content .code-block .hljs-deletion {
-    color: #f44747;
+    color: var(--code-deletion);
 }
 
 .pdf-content .code-block .hljs-link {
-    color: #9cdcfe;
+    color: var(--code-variable);
     text-decoration: underline;
 }
 
