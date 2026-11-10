@@ -855,7 +855,7 @@ function createPageFooter(title, current, total) {
 function renderPages(html, title = '') {
   previewHtml = html;
   previewDocumentTitle = title;
-  const pages = paginate(decorateCodeBlocks(addExternalLinkAttributes(html)));
+  const pages = paginate(decorateCodeBlocks(addExternalLinkAttributes(decorateQuestionLinks(html))));
   const total = pages.length;
 
   pdfPreview.innerHTML = '';
@@ -871,6 +871,76 @@ function renderPages(html, title = '') {
   highlightCodeBlocks(pdfPreview);
   initVideoCardMetadata(pdfPreview);
   scheduleImageReflow();
+}
+
+function getGoogleFormUrl(value) {
+  try {
+    const url = new URL(value, document.baseURI);
+    if (url.protocol !== 'https:' || url.hostname !== 'docs.google.com') return null;
+    if (!/^\/forms\/(?:u\/\d+\/)?d\/(?:e\/)?[^/]+\/viewform\/?$/.test(url.pathname)) return null;
+    return url.href;
+  } catch (err) {
+    return null;
+  }
+}
+
+function createQuestionCard(link) {
+  const url = getGoogleFormUrl(link.getAttribute('href'));
+  if (!url) return null;
+
+  const title = link.dataset.title || link.getAttribute('title') || link.textContent.trim() || 'Formulario de Google';
+  const description = link.dataset.description || link.getAttribute('aria-description')
+    || 'Abrí el formulario para responder las preguntas.';
+
+  const card = document.createElement('a');
+  card.className = 'question-card';
+  card.href = url;
+  card.target = '_blank';
+  card.rel = 'noopener noreferrer';
+  card.setAttribute('aria-label', `Abrir formulario: ${title}`);
+
+  const icon = document.createElement('span');
+  icon.className = 'question-card__icon';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.innerHTML = '<svg viewBox="0 0 48 48" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="20" /><path d="M18.5 18a5.7 5.7 0 1 1 9.6 4.1c-2.6 2.2-4.1 3.2-4.1 6.4" /><circle cx="24" cy="35" r="1" fill="currentColor" stroke="none" /></svg>';
+
+  const details = document.createElement('span');
+  details.className = 'question-card__details';
+
+  const eyebrow = document.createElement('span');
+  eyebrow.className = 'question-card__eyebrow';
+  eyebrow.textContent = 'Formulario de Google';
+
+  const heading = document.createElement('span');
+  heading.className = 'question-card__title';
+  heading.textContent = title;
+
+  const summary = document.createElement('span');
+  summary.className = 'question-card__description';
+  const normalizedDescription = description.replace(/\s+/g, ' ').trim();
+  summary.textContent = normalizedDescription.length > VIDEO_DESCRIPTION_PREVIEW_LIMIT
+    ? `${normalizedDescription.slice(0, VIDEO_DESCRIPTION_PREVIEW_LIMIT - 1).trimEnd()}…`
+    : normalizedDescription;
+
+  const action = document.createElement('span');
+  action.className = 'question-card__action';
+  action.textContent = 'Abrir formulario ↗';
+
+  details.append(eyebrow, heading, summary, action);
+  card.append(icon, details);
+  return card;
+}
+
+function decorateQuestionLinks(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  template.content.querySelectorAll('a#question-link, a.question-link').forEach((link) => {
+    const card = createQuestionCard(link);
+    if (card) link.replaceWith(card);
+  });
+
+  return template.innerHTML;
 }
 
 function getYouTubeVideoId(value) {
