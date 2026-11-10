@@ -627,7 +627,7 @@ function buildCodeBlockFragment(block, lines, startLine, withHeader) {
   return fragment;
 }
 
-function splitCodeBlock(block) {
+function splitCodeBlock(block, content) {
   const pre = block.querySelector('pre');
   const code = pre ? pre.querySelector('code') : null;
   const source = code ? code.textContent : pre ? pre.textContent : '';
@@ -636,20 +636,46 @@ function splitCodeBlock(block) {
   if (lines.length < 2) return null;
 
   const start = Number.parseInt(block.dataset.startLine || '1', 10) || 1;
-  const middle = Math.ceil(lines.length / 2);
+  const withHeader = !block.classList.contains('code-block--continued');
+  let low = 1;
+  let high = lines.length - 1;
+  let fittingLines = 0;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const fragment = buildCodeBlockFragment(block, lines.slice(0, middle), start, withHeader);
+    content.appendChild(fragment);
+    const fits = !isOverflowing(content);
+    content.removeChild(fragment);
+
+    if (fits) {
+      fittingLines = middle;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+
+  if (!fittingLines) return null;
 
   return [
-    buildCodeBlockFragment(block, lines.slice(0, middle), start, true),
-    buildCodeBlockFragment(block, lines.slice(middle), start + middle, false),
+    buildCodeBlockFragment(block, lines.slice(0, fittingLines), start, withHeader),
+    buildCodeBlockFragment(block, lines.slice(fittingLines), start + fittingLines, false),
   ];
+}
+
+function fitsOnEmptyPage(node) {
+  const page = createPage();
+  measureHost.appendChild(page.page);
+  page.content.appendChild(node);
+  const fits = !isOverflowing(page.content);
+  page.content.removeChild(node);
+  measureHost.removeChild(page.page);
+  return fits;
 }
 
 function splitNode(node) {
   if (node.nodeType !== Node.ELEMENT_NODE) return null;
-
-  if (node.classList.contains('code-block')) {
-    return splitCodeBlock(node);
-  }
 
   if ((node.tagName === 'UL' || node.tagName === 'OL') && node.children.length > 1) {
     return splitList(node);
@@ -716,6 +742,32 @@ function paginate(html) {
     if (!isOverflowing(current.content)) continue;
 
     current.content.removeChild(node);
+
+    if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('code-block')) {
+      if (current.content.childNodes.length && fitsOnEmptyPage(node)) {
+        queue.unshift(node);
+        current = newPage();
+        continue;
+      }
+
+      const parts = splitCodeBlock(node, current.content);
+      if (parts) {
+        current.content.appendChild(parts[0]);
+        queue.unshift(parts[1]);
+        current = newPage();
+        continue;
+      }
+
+      if (!current.content.childNodes.length) {
+        current.content.appendChild(node);
+        scaleToFit(node, current.content);
+        current = newPage();
+      } else {
+        queue.unshift(node);
+        current = newPage();
+      }
+      continue;
+    }
 
     const parts = splitNode(node);
 
