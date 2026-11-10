@@ -1,7 +1,7 @@
 # U2 - Capítulo #2
 # Título del capítulo #1 de la Unidad 2
 
-lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+lorem ipsum dolor sit amet, consectetur <a href="#">adipiscing elit</a>. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
 ## Contenido de Video
 

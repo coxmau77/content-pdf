@@ -812,8 +812,8 @@ aside .pane-header h1 {
 .pdf-content .question-card__icon {
     display: grid;
     place-items: center;
-    background: color-mix(in srgb, var(--main-clr) 16%, white);
-    color: var(--main-clr-strong);
+    background: var(--main-clr);
+    color: #fff;
 }
 
 .pdf-content .question-card__details {
@@ -859,10 +859,22 @@ aside .pane-header h1 {
 }
 
 .pdf-content .question-card__action {
+    display: inline-flex;
+    align-items: center;
+    gap: .35em;
     justify-self: end;
-    color: var(--main-clr-strong);
+    padding: .45em .75em;
+    border-radius: 10vw;
+    background: var(--main-clr);
+    color: #fff;
     font-size: .82em;
     font-weight: 600;
+    transition: background .15s;
+}
+
+.pdf-content a.question-card:hover .question-card__action,
+.pdf-content a.question-card:focus-visible .question-card__action {
+    background: var(--main-clr-strong);
 }
 
 .pdf-content img {

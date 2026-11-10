@@ -57,7 +57,7 @@ let reconnectPending = false;
 const fileHandles = new Map();
 
 const COPY_TEMPLATES = {
-  image: '<img src="url-de-la-imagen" alt="texto alternativo">',
+  image: '![sample](https://i.imgur.com/t9mFJow.png)',
   video: `<a class="video-card" href="https://www.youtube.com/watch?v=HMHbOUk4zKs" target="_blank" rel="noopener noreferrer" data-video-card>
     <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
     <span class="video-card__play" aria-hidden="true">▶</span>
@@ -1192,6 +1192,7 @@ function addExternalLinkAttributes(html) {
 
   template.content.querySelectorAll('img[src]').forEach((image) => {
     if (!isExternalHttpUrl(image.getAttribute('src'))) return;
+    image.referrerPolicy = 'no-referrer';
     if (image.closest('a')) return;
 
     const link = document.createElement('a');
