@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contenido PDF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+
+  <main>
+    <header class="pane-header">
+      <div class="pane-title">
+        <h1>Contenido</h1>
+        <span class="folder-info" id="folder-info">Sin carpeta</span>
+      </div>
+      <div class="pane-actions">
+        <button class="icon-btn" type="button" id="pick-folder" aria-label="Cargar carpeta de contenido"
+          title="Cargar carpeta">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          </svg>
+        </button>
+        <button class="icon-btn" type="button" id="save-doc" aria-label="Guardar documento" title="Guardar (Ctrl+S)"
+          disabled>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+        </button>
+        <button class="icon-btn" type="button" popovertarget="docs-popover" aria-label="Abrir documentos">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+            <path d="M8 13h8M8 17h8M8 9h2" />
+          </svg>
+        </button>
+      </div>
+      <input type="file" id="folder-input" webkitdirectory multiple hidden>
+      <div id="docs-popover" popover>
+        <div class="popover-header" id="docs-popover-title">Documentos</div>
+        <ul id="docs-list"></ul>
+      </div>
+    </header>
+
+    <section class="editor-wrap">
+      <textarea id="editor" spellcheck="false" placeholder="Selecciona un documento para editarlo..."></textarea>
+    </section>
+  </main>
+
+  <aside>
+    <header class="pane-header">
+      <h1>Previsualización A4</h1>
+      <button class="icon-btn" type="button" popovertarget="options-popover" aria-label="Abrir opciones">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <circle cx="9" cy="6" r="2.4" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <circle cx="15" cy="12" r="2.4" />
+          <line x1="4" y1="18" x2="20" y2="18" />
+          <circle cx="8" cy="18" r="2.4" />
+        </svg>
+      </button>
+      <div id="options-popover" popover>
+        <div class="popover-header">Opciones</div>
+
+        <div class="option">
+          <label for="font-size">Tamaño de fuente</label>
+          <select id="font-size">
+            <option value="10px">10 px</option>
+            <option value="11px">11 px</option>
+            <option value="12px" selected>12 px</option>
+            <option value="13px">13 px</option>
+            <option value="14px">14 px</option>
+            <option value="16px">16 px</option>
+          </select>
+        </div>
+
+        <div class="option">
+          <label for="margin-size">Márgenes</label>
+          <select id="margin-size">
+            <option value="10mm">10 mm</option>
+            <option value="15mm">15 mm</option>
+            <option value="20mm" selected>20 mm</option>
+            <option value="25mm">25 mm</option>
+            <option value="30mm">30 mm</option>
+          </select>
+        </div>
+
+        <label class="switch-row" for="toggle-grid">
+          <span>Ver grilla</span>
+          <input type="checkbox" id="toggle-grid">
+        </label>
+
+        <button class="btn-primary" type="button" id="export-pdf">Exportar a PDF</button>
+      </div>
+    </header>
+
+    <section class="preview-wrap">
+      <div class="pdf-preview" id="pdf-preview"></div>
+    </section>
+  </aside>
+
+  <script src="assets/js/vendor/marked.min.js"></script>
+  <script src="assets/js/scripts.js"></script>
+</body>
+
+</html>

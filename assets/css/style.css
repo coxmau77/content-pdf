@@ -1,0 +1,604 @@
+/* Utiliza siempre las variables CSS para definir colores y otros valores que se repiten en tu hoja de estilos. Esto facilita el mantenimiento y la consistencia del diseño. */
+:root {
+    --main-clr: tomato;
+    --main-clr-strong: #e04a2f;
+    --bg: #eef0f3;
+    --panel-bg: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --guide-clr: rgba(255, 99, 71, .55);
+
+    /* Valores editables desde el panel de opciones */
+    --doc-font-size: 12px;
+    --page-margin: 20mm;
+    --page-gap: 24px;
+
+    --radius: 10px;
+    --shadow: 0 12px 32px rgba(15, 23, 42, .16);
+}
+
+html {
+    accent-color: var(--main-clr);
+    font-family: 'Poppins', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+}
+
+main,
+aside {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+main {
+    background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+}
+
+aside {
+    background: var(--bg);
+}
+
+/* ---------- Cabeceras de panel ---------- */
+.pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-bg);
+}
+
+aside .pane-header {
+    background: #f8f9fb;
+}
+
+.pane-header h1 {
+    margin: 0;
+    font-size: .95rem;
+    font-weight: 600;
+}
+
+.pane-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.folder-info {
+    overflow: hidden;
+    font-size: .72rem;
+    color: var(--muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pane-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ---------- Botones de ícono ---------- */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    transition: color .15s, border-color .15s, transform .1s;
+}
+
+.icon-btn:hover {
+    color: var(--main-clr);
+    border-color: var(--main-clr);
+}
+
+.icon-btn.is-active {
+    color: var(--main-clr);
+    border-color: var(--main-clr);
+    background: color-mix(in srgb, var(--main-clr) 12%, white);
+}
+
+.icon-btn:active {
+    transform: scale(.96);
+}
+
+.icon-btn:disabled {
+    opacity: .45;
+    cursor: default;
+}
+
+.icon-btn:disabled:hover {
+    color: var(--text);
+    border-color: var(--border);
+    background: #fff;
+}
+
+/* Indicador de cambios sin guardar */
+.icon-btn.is-dirty {
+    position: relative;
+}
+
+.icon-btn.is-dirty::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--main-clr-strong);
+    box-shadow: 0 0 0 2px #fff;
+}
+
+/* ---------- Popovers ---------- */
+[popover] {
+    width: min(320px, 90vw);
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+
+[popover]::backdrop {
+    background: rgba(15, 23, 42, .15);
+}
+
+.popover-header {
+    padding: 14px 16px 8px;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* Lista de documentos */
+#docs-list {
+    max-height: 60vh;
+    margin: 0;
+    padding: 4px 8px 12px;
+    overflow: auto;
+    list-style: none;
+}
+
+#docs-list .unit-title {
+    padding: 10px 8px 4px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.doc-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.doc-btn:hover {
+    background: #f3f4f6;
+}
+
+.doc-btn.active {
+    background: color-mix(in srgb, var(--main-clr) 14%, white);
+    color: var(--main-clr-strong);
+    font-weight: 600;
+}
+
+.doc-btn svg {
+    flex-shrink: 0;
+}
+
+/* Opciones */
+#options-popover {
+    padding-bottom: 12px;
+}
+
+.option {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 16px;
+}
+
+.option label {
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.option select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+}
+
+.switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.switch-row input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    width: calc(100% - 32px);
+    margin: 8px 16px 4px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--main-clr);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.btn-primary:hover {
+    background: var(--main-clr-strong);
+}
+
+/* ---------- Editor ---------- */
+.editor-wrap {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+#editor {
+    flex: 1;
+    width: 100%;
+    padding: 20px;
+    border: none;
+    outline: none;
+    resize: none;
+    background: var(--panel-bg);
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    tab-size: 2;
+}
+
+#editor::placeholder {
+    color: var(--muted);
+}
+
+/* ---------- Previsualización A4 ---------- */
+.preview-wrap {
+    display: flex;
+    flex: 1;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 0;
+    padding: 24px;
+    overflow: auto;
+}
+
+.pdf-preview {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--page-gap);
+    flex-shrink: 0;
+    width: 210mm;
+    background: transparent;
+}
+
+.pdf-sheet {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pdf-page {
+    position: relative;
+    flex-shrink: 0;
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, .18);
+}
+
+.pdf-content {
+    height: 100%;
+    padding: var(--page-margin);
+    color: #111827;
+    font-size: var(--doc-font-size);
+    line-height: 1.65;
+}
+
+/* Host oculto usado para medir el alto real del contenido */
+.pdf-measure {
+    position: absolute;
+    top: 0;
+    left: -10000px;
+    gap: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.pdf-measure .pdf-page {
+    box-shadow: none;
+}
+
+.pdf-content>*:first-child {
+    margin-top: 0;
+}
+
+.pdf-content>*:last-child {
+    margin-bottom: 0;
+}
+
+/* Tipografía del contenido Markdown */
+.pdf-content h1,
+.pdf-content h2,
+.pdf-content h3,
+.pdf-content h4,
+.pdf-content h5,
+.pdf-content h6 {
+    margin: 1.1em 0 .5em;
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+.pdf-content h1 {
+    font-size: 2em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .3em;
+}
+
+.pdf-content h2 {
+    font-size: 1.55em;
+}
+
+.pdf-content h3 {
+    font-size: 1.25em;
+}
+
+.pdf-content p {
+    margin: .65em 0;
+}
+
+.pdf-content ul,
+.pdf-content ol {
+    margin: .65em 0;
+    padding-left: 1.5em;
+}
+
+.pdf-content li+li {
+    margin-top: .25em;
+}
+
+.pdf-content blockquote {
+    margin: .8em 0;
+    padding: .3em 1em;
+    border-left: 4px solid var(--main-clr);
+    background: #f9fafb;
+    color: #374151;
+}
+
+.pdf-content code {
+    padding: .1em .35em;
+    border-radius: 4px;
+    background: #f1f3f5;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .9em;
+}
+
+.pdf-content pre {
+    margin: .8em 0;
+    padding: 1em;
+    overflow-x: auto;
+    border-radius: 6px;
+    background: #f1f3f5;
+}
+
+.pdf-content pre code {
+    padding: 0;
+    background: none;
+}
+
+.pdf-content table {
+    width: 100%;
+    margin: .8em 0;
+    border-collapse: collapse;
+}
+
+.pdf-content th,
+.pdf-content td {
+    padding: .45em .6em;
+    border: 1px solid var(--border);
+    text-align: left;
+}
+
+.pdf-content th {
+    background: #f3f4f6;
+}
+
+.pdf-content hr {
+    margin: 1.2em 0;
+    border: none;
+    border-top: 1px solid var(--border);
+}
+
+.pdf-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.pdf-content a {
+    color: var(--main-clr-strong);
+}
+
+.pdf-content .hint {
+    padding: 1em;
+    border-radius: 8px;
+    background: #fff7ed;
+    color: #9a3412;
+    font-size: .95em;
+}
+
+/* Guías de márgenes / área segura */
+.pdf-preview.grid .pdf-page::after {
+    content: "";
+    position: absolute;
+    inset: var(--page-margin);
+    border: 1px dashed var(--guide-clr);
+    pointer-events: none;
+}
+
+/* División entre hojas */
+.pdf-preview.grid .pdf-sheet:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    bottom: calc(var(--page-gap) / -2);
+    border-top: 1px dotted var(--guide-clr);
+    pointer-events: none;
+}
+
+/* Numeración de cada hoja */
+.pdf-preview.grid .pdf-sheet::before {
+    content: "Hoja " attr(data-page);
+    position: absolute;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    bottom: 0;
+    height: var(--page-margin);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--guide-clr);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    body {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(240px, 1fr) minmax(240px, 1fr);
+        overflow: auto;
+    }
+
+    main {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+/* ---------- Impresión / Exportar a PDF ---------- */
+@media print {
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    body {
+        display: block;
+        height: auto;
+        overflow: visible;
+        background: #fff;
+    }
+
+    main,
+    .pane-header,
+    [popover] {
+        display: none !important;
+    }
+
+    aside,
+    .preview-wrap {
+        display: block;
+        padding: 0;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .pdf-preview {
+        display: block;
+        width: auto;
+        gap: 0;
+        margin: 0;
+        zoom: 1 !important;
+    }
+
+    .pdf-sheet {
+        margin: 0;
+        break-after: page;
+        break-inside: avoid;
+    }
+
+    .pdf-sheet:last-child {
+        break-after: auto;
+    }
+
+    .pdf-page {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        box-shadow: none;
+    }
+
+    .pdf-preview.grid .pdf-page::after,
+    .pdf-preview.grid .pdf-sheet::before,
+    .pdf-preview.grid .pdf-sheet::after {
+        display: none;
+    }
+}
