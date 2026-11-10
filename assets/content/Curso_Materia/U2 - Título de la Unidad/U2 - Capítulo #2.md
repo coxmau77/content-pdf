@@ -3,6 +3,44 @@
 
 lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
+## Contenido de Video
+
+Copia y pega el codigo 
+``` pseudocode
+// Declaración explícita de variables
+DECLARE Alias : STRING
+DECLARE Longitud : INTEGER
+
+// Entrada de datos y validación de longitud
+OUTPUT "Por favor, ingrese un alias de jugador (5-15 caracteres):"
+INPUT Alias
+
+Longitud <- LENGTH(Alias)
+
+IF Longitud >= 5 AND Longitud <= 15 THEN 
+    // Concatenación usando el operador oficial de Cambridge (&)
+    OUTPUT "¡Bienvenido al juego, ", Alias, "! Tu cuenta ha sido creada."
+ELSE
+    OUTPUT "Error: El alias ingresado no cumple con la longitud permitida."
+ENDIF
+```
+
+```html
+<a class="video-card" href="https://youtu.be/ZwNeu833FXU?si=eZzIv-TiZHaTmDsX" target="_blank" rel="noopener noreferrer" data-video-card>
+    <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
+    <span class="video-card__play" aria-hidden="true">▶</span>
+    </div>
+    <div class="video-card__details">
+    <p class="video-card__eyebrow">Video</p>
+    <h3 class="video-card__title" data-video-title>Cargando título...</h3>
+    <p class="video-card__metadata">
+      <span data-video-author>Cargando información...</span>
+      <span data-video-provider></span>
+    </p>
+    </div>
+</a>
+```
+
 <a class="video-card" href="https://youtu.be/ZwNeu833FXU?si=eZzIv-TiZHaTmDsX" target="_blank" rel="noopener noreferrer" data-video-card>
     <div class="video-card__thumbnail-wrap" role="img" aria-label="Miniatura del video">
     <span class="video-card__play" aria-hidden="true">▶</span>

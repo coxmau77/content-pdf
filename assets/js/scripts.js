@@ -883,6 +883,7 @@ async function loadVideoCardMetadata(card, elements) {
 const GAP_LINE_EM = 1.65;
 
 const CODE_LANG_LABELS = {
+  pseudocode: 'Pseudocode',
   html: 'HTML',
   xml: 'HTML',
   svg: 'SVG',
@@ -913,6 +914,31 @@ const CODE_LANG_LABELS = {
   plaintext: 'Texto',
   text: 'Texto',
 };
+
+function registerCambridgePseudocode() {
+  if (typeof hljs === 'undefined' || hljs.getLanguage('pseudocode')) return;
+
+  hljs.registerLanguage('pseudocode', (highlight) => ({
+    name: 'Pseudocode',
+    aliases: ['cambridge-pseudocode'],
+    case_insensitive: true,
+    keywords: {
+      keyword: 'DECLARE CONSTANT INPUT OUTPUT IF THEN ELSE ENDIF CASE OF OTHERWISE ENDCASE FOR TO STEP NEXT WHILE DO ENDWHILE REPEAT UNTIL PROCEDURE ENDPROCEDURE FUNCTION ENDFUNCTION RETURNS RETURN CALL OPENFILE CLOSEFILE READFILE WRITEFILE APPEND AND OR NOT DIV MOD',
+      type: 'INTEGER REAL CHAR STRING BOOLEAN DATE',
+      literal: 'TRUE FALSE',
+      built_in: 'LENGTH LCASE UCASE SUBSTRING ROUND RANDOM INT EOF',
+    },
+    contains: [
+      highlight.COMMENT('//', '$'),
+      highlight.QUOTE_STRING_MODE,
+      highlight.C_NUMBER_MODE,
+      {
+        className: 'operator',
+        begin: /←|<=|>=|<>|=|<|>|\+|-|\*|\/|\^/,
+      },
+    ],
+  }));
+}
 
 function countNewlines(value) {
   return (value.match(/\n/g) || []).length;
@@ -1555,6 +1581,7 @@ function init() {
     marked.setOptions({ gfm: true, breaks: true });
   }
 
+  registerCambridgePseudocode();
   initFormatControls();
   initCopyActions();
   initSaveControls();

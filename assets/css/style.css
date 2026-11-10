@@ -1,6 +1,6 @@
 /* Utiliza siempre las variables CSS para definir colores y otros valores que se repiten en tu hoja de estilos. Esto facilita el mantenimiento y la consistencia del diseño. */
 :root {
-    --main-clr: oklab(72.828% 0.19519 -0.02754);
+    --main-clr: oklab(53.027% -0.04837 -0.15378);
     --main-clr-strong: color-mix(in oklab, var(--main-clr) 80%, black);
     --bg: #eef0f3;
     --panel-bg: #ffffff;
@@ -17,20 +17,20 @@
     --radius: 10px;
     --shadow: 0 12px 32px rgba(15, 23, 42, .16);
 
-    --code-bg: color-mix(in oklab, #111827 88%, var(--main-clr));
-    --code-bar-bg: color-mix(in oklab, var(--code-bg) 82%, var(--main-clr));
-    --code-border: color-mix(in oklab, var(--code-bg) 60%, var(--main-clr));
-    --code-text: color-mix(in oklab, #d4d4d4 80%, var(--main-clr));
-    --code-muted: color-mix(in oklab, #b0b0b0 80%, var(--main-clr));
-    --code-gutter: color-mix(in oklab, #b0b0b0 80%, var(--main-clr));
-    --code-comment: color-mix(in oklab, #6a9955 80%, var(--main-clr));
-    --code-keyword: color-mix(in oklab, #569cd6 80%, var(--main-clr));
-    --code-string: color-mix(in oklab, #ce9178 80%, var(--main-clr));
-    --code-number: color-mix(in oklab, #b5cea8 80%, var(--main-clr));
-    --code-title: color-mix(in oklab, #dcdcaa 80%, var(--main-clr));
-    --code-variable: color-mix(in oklab, #9cdcfe 80%, var(--main-clr));
-    --code-type: color-mix(in oklab, #4ec9b0 80%, var(--main-clr));
-    --code-deletion: color-mix(in oklab, #f44747 70%, var(--main-clr));
+    --code-bg: color-mix(in oklab, white 96%, var(--main-clr));
+    --code-bar-bg: color-mix(in oklab, white 90%, var(--main-clr));
+    --code-border: color-mix(in oklab, #6b7280 20%, var(--main-clr));
+    --code-text: color-mix(in oklab, #1f2937 90%, var(--main-clr));
+    --code-muted: color-mix(in oklab, #4b5563 90%, var(--main-clr));
+    --code-gutter: color-mix(in oklab, #4b5563 90%, var(--main-clr));
+    --code-comment: color-mix(in srgb, var(--code-muted) 85%, transparent);
+    --code-keyword: color-mix(in oklab, #0000ff 90%, var(--main-clr));
+    --code-string: color-mix(in oklab, #a31515 90%, var(--main-clr));
+    --code-number: color-mix(in oklab, #006b45 90%, var(--main-clr));
+    --code-title: color-mix(in oklab, #795e26 90%, var(--main-clr));
+    --code-variable: color-mix(in oklab, #001080 90%, var(--main-clr));
+    --code-type: color-mix(in oklab, #146c82 90%, var(--main-clr));
+    --code-deletion: color-mix(in oklab, #a31515 90%, var(--main-clr));
     --code-font: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -630,7 +630,7 @@ aside .pane-header h1 {
 .pdf-content .code-block__gutter {
     flex: 0 0 auto;
     padding: 10px 8px 10px 12px;
-    border-right: 1px solid rgba(255, 255, 255, .06);
+    border-right: 1px solid color-mix(in srgb, var(--code-border) 35%, transparent);
     color: var(--code-gutter);
     font-family: var(--code-font);
     font-size: .82em;
@@ -665,13 +665,11 @@ aside .pane-header h1 {
     white-space: pre-wrap;
 }
 
-/* Tema VS Code Dark+ para highlight.js */
+/* Tema claro tipo VS Code Light+ para highlight.js */
 .pdf-content .code-block .hljs {
     background: transparent;
     color: var(--code-text);
 }
-
-/* Agregar un Tema VS Code Light+ para que el contraste sea mejor al imprimir */
 
 .pdf-content .code-block .hljs-comment,
 .pdf-content .code-block .hljs-quote {
