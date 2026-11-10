@@ -1,3 +1,4 @@
+# Array Engine / 2D Blueprint
 I will now create the **Array Engine // 2D Blueprint** application, completely re-engineered with a clean, flat 2D aesthetic, soft rounded corners, refined dark-mode surfaces, and interactive animations.
 
 ### Principales transformaciones implementadas
@@ -5,6 +6,28 @@ I will now create the **Array Engine // 2D Blueprint** application, completely r
 1. **Estética 2D Plana y Minimalista:**
 * Se eliminaron por completo las mallas, proyecciones, cilindros y cajas isométricas con matrices 3D o gradientes pesados.
 * La interfaz adopta un diseño plano con estética *dark mode* (inspirada en interfaces como Linear, Vercel o Raycast): fondo `#0b0f19`, superficies `#111827`/`#151f32`, bordes translúcidos (`border-white/10`) y esquinas redondeadas suaves de 10px a 16px con botones tipo píldora (`rounded-full`).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 2. **Visualizadores 2D para cada método:**

@@ -512,8 +512,112 @@ function splitPre(pre) {
   ];
 }
 
+function splitCodeLines(source) {
+  const lines = source.split('\n');
+  if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop();
+  return lines;
+}
+
+function getCodeLanguage(code) {
+  if (!code) return '';
+  const match = Array.from(code.classList).find((name) => name.startsWith('language-'));
+  return match ? match.slice('language-'.length).toLowerCase() : '';
+}
+
+function codeLanguageLabel(lang) {
+  if (!lang) return 'Código';
+  return CODE_LANG_LABELS[lang] || lang.toUpperCase();
+}
+
+function buildCodeGutter(startLine, count) {
+  const gutter = document.createElement('div');
+  gutter.className = 'code-block__gutter';
+  gutter.setAttribute('aria-hidden', 'true');
+
+  for (let index = 0; index < count; index += 1) {
+    const line = document.createElement('span');
+    line.textContent = String(startLine + index);
+    gutter.appendChild(line);
+  }
+
+  return gutter;
+}
+
+function buildCodeBar(lang) {
+  const bar = document.createElement('div');
+  bar.className = 'code-block__bar';
+
+  const dots = document.createElement('span');
+  dots.className = 'code-block__dots';
+  dots.setAttribute('aria-hidden', 'true');
+  dots.innerHTML = '<i></i><i></i><i></i>';
+
+  const label = document.createElement('span');
+  label.className = 'code-block__lang';
+  label.textContent = codeLanguageLabel(lang);
+
+  bar.appendChild(dots);
+  bar.appendChild(label);
+
+  return bar;
+}
+
+function buildCodeBlockFragment(block, lines, startLine, withHeader) {
+  const fragment = block.cloneNode(false);
+  fragment.dataset.startLine = String(startLine);
+
+  const bar = withHeader ? block.querySelector('.code-block__bar') : null;
+  if (bar) {
+    fragment.appendChild(bar.cloneNode(true));
+  } else {
+    fragment.classList.add('code-block--continued');
+  }
+
+  const body = document.createElement('div');
+  body.className = 'code-block__body';
+  body.appendChild(buildCodeGutter(startLine, lines.length));
+
+  const pre = block.querySelector('pre');
+  const preFragment = pre ? pre.cloneNode(false) : document.createElement('pre');
+  const code = pre ? pre.querySelector('code') : null;
+
+  if (code) {
+    const codeFragment = code.cloneNode(false);
+    codeFragment.textContent = lines.join('\n');
+    preFragment.appendChild(codeFragment);
+  } else {
+    preFragment.textContent = lines.join('\n');
+  }
+
+  body.appendChild(preFragment);
+  fragment.appendChild(body);
+
+  return fragment;
+}
+
+function splitCodeBlock(block) {
+  const pre = block.querySelector('pre');
+  const code = pre ? pre.querySelector('code') : null;
+  const source = code ? code.textContent : pre ? pre.textContent : '';
+  const lines = splitCodeLines(source);
+
+  if (lines.length < 2) return null;
+
+  const start = Number.parseInt(block.dataset.startLine || '1', 10) || 1;
+  const middle = Math.ceil(lines.length / 2);
+
+  return [
+    buildCodeBlockFragment(block, lines.slice(0, middle), start, true),
+    buildCodeBlockFragment(block, lines.slice(middle), start + middle, false),
+  ];
+}
+
 function splitNode(node) {
   if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+  if (node.classList.contains('code-block')) {
+    return splitCodeBlock(node);
+  }
 
   if ((node.tagName === 'UL' || node.tagName === 'OL') && node.children.length > 1) {
     return splitList(node);
@@ -645,7 +749,7 @@ function createPageFooter(title, current, total) {
 }
 
 function renderPages(html, title = '') {
-  const pages = paginate(html);
+  const pages = paginate(decorateCodeBlocks(html));
   const total = pages.length;
 
   pdfPreview.innerHTML = '';
@@ -658,11 +762,44 @@ function renderPages(html, title = '') {
     pdfPreview.appendChild(sheet);
   });
 
+  highlightCodeBlocks(pdfPreview);
   scheduleImageReflow();
 }
 
 /* ---------- Render ---------- */
 const GAP_LINE_EM = 1.65;
+
+const CODE_LANG_LABELS = {
+  html: 'HTML',
+  xml: 'HTML',
+  svg: 'SVG',
+  js: 'JavaScript',
+  javascript: 'JavaScript',
+  jsx: 'JSX',
+  ts: 'TypeScript',
+  typescript: 'TypeScript',
+  tsx: 'TSX',
+  css: 'CSS',
+  scss: 'SCSS',
+  less: 'LESS',
+  json: 'JSON',
+  bash: 'Bash',
+  sh: 'Shell',
+  shell: 'Shell',
+  zsh: 'Shell',
+  md: 'Markdown',
+  markdown: 'Markdown',
+  py: 'Python',
+  python: 'Python',
+  java: 'Java',
+  php: 'PHP',
+  sql: 'SQL',
+  yaml: 'YAML',
+  yml: 'YAML',
+  diff: 'Diff',
+  plaintext: 'Texto',
+  text: 'Texto',
+};
 
 function countNewlines(value) {
   return (value.match(/\n/g) || []).length;
@@ -710,6 +847,56 @@ function inlineToPlainText(raw) {
   const template = document.createElement('template');
   template.innerHTML = marked.parseInline(raw);
   return template.content.textContent.trim();
+}
+
+function decorateCodeBlocks(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  template.content.querySelectorAll('pre').forEach((pre) => {
+    if (pre.closest('.code-block__body')) return;
+
+    const code = pre.querySelector('code');
+    const source = code ? code.textContent : pre.textContent;
+    const lang = getCodeLanguage(code);
+    const lines = splitCodeLines(source);
+
+    if (code) {
+      code.textContent = lines.join('\n');
+    } else {
+      pre.textContent = lines.join('\n');
+    }
+
+    const block = document.createElement('div');
+    block.className = 'code-block';
+    block.dataset.startLine = '1';
+    if (lang) block.dataset.lang = lang;
+
+    const body = document.createElement('div');
+    body.className = 'code-block__body';
+    body.appendChild(buildCodeGutter(1, lines.length));
+
+    pre.classList.add('code-block__pre');
+    block.appendChild(buildCodeBar(lang));
+    block.appendChild(body);
+
+    pre.parentNode.insertBefore(block, pre);
+    body.appendChild(pre);
+  });
+
+  return template.innerHTML;
+}
+
+function highlightCodeBlocks(root) {
+  if (typeof hljs === 'undefined') return;
+
+  root.querySelectorAll('.code-block pre code').forEach((code) => {
+    const lang = getCodeLanguage(code);
+    if (!lang || !hljs.getLanguage(lang)) return;
+
+    code.innerHTML = hljs.highlight(code.textContent, { language: lang }).value;
+    code.classList.add('hljs');
+  });
 }
 
 function resolveHeadingTitle(source, tokens) {

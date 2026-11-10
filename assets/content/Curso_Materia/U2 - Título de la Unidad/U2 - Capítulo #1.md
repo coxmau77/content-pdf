@@ -13,6 +13,7 @@ Empezá por este video:
 Para crear una página web básica en HTML necesitarás al menos las siguientes etiquetas:
 
 ```html
+<!-- Comentarios en HTML -->
 <html>
   <head>
    <title>Título de la página</title>
@@ -23,6 +24,17 @@ Para crear una página web básica en HTML necesitarás al menos las siguientes 
   </body>
 </html>
 ```
+```js
+// Comentarios en JavaScript
+console.log("Hola mundo!");
+```
+```css
+/*Comentarios en css*/
+body {
+  color: pink;
+}
+```
+
 
 Al leer el código, el _browser_ interpreta: 
 

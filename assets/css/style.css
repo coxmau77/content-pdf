@@ -16,6 +16,15 @@
 
     --radius: 10px;
     --shadow: 0 12px 32px rgba(15, 23, 42, .16);
+
+    /* Bloques de código estilo VS Code Dark+ */
+    --code-bg: #1e1e1e;
+    --code-bar-bg: #252526;
+    --code-border: #2d2d30;
+    --code-text: #d4d4d4;
+    --code-muted: #858585;
+    --code-gutter: #6e7681;
+    --code-font: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 html {
@@ -488,25 +497,208 @@ aside .pane-header h1 {
     color: #374151;
 }
 
-.pdf-content code {
+.pdf-content :not(pre)>code {
     padding: .1em .35em;
     border-radius: 4px;
     background: #f1f3f5;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--code-font);
     font-size: .9em;
 }
 
-.pdf-content pre {
-    margin: .8em 0;
-    padding: 1em;
-    overflow-x: auto;
-    border-radius: 6px;
-    background: #f1f3f5;
+/* ---------- Bloques de código estilo VS Code ---------- */
+.pdf-content .code-block {
+    margin: .9em 0;
+    overflow: hidden;
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    background: var(--code-bg);
+    color: var(--code-text);
+    break-inside: avoid;
 }
 
-.pdf-content pre code {
+.pdf-content .code-block--continued {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.pdf-content .code-block__bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--code-bar-bg);
+    border-bottom: 1px solid var(--code-border);
+}
+
+.pdf-content .code-block__dots {
+    display: inline-flex;
+    gap: 5px;
+}
+
+.pdf-content .code-block__dots i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.pdf-content .code-block__dots i:nth-child(1) {
+    background: #ff5f56;
+}
+
+.pdf-content .code-block__dots i:nth-child(2) {
+    background: #ffbd2e;
+}
+
+.pdf-content .code-block__dots i:nth-child(3) {
+    background: #27c93f;
+}
+
+.pdf-content .code-block__lang {
+    margin-left: auto;
+    color: var(--code-muted);
+    font-family: var(--code-font);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.pdf-content .code-block__body {
+    display: flex;
+    align-items: stretch;
+}
+
+.pdf-content .code-block__gutter {
+    flex: 0 0 auto;
+    padding: 10px 8px 10px 12px;
+    border-right: 1px solid rgba(255, 255, 255, .06);
+    color: var(--code-gutter);
+    font-family: var(--code-font);
+    font-size: .82em;
+    line-height: 1.5;
+    text-align: right;
+    user-select: none;
+}
+
+.pdf-content .code-block__gutter span {
+    display: block;
+}
+
+.pdf-content .code-block__pre {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 10px 12px 10px 10px;
+    overflow-x: auto;
+    border-radius: 0;
+    background: transparent;
+}
+
+.pdf-content .code-block__pre code {
+    display: block;
     padding: 0;
     background: none;
+    color: var(--code-text);
+    font-family: var(--code-font);
+    font-size: .82em;
+    line-height: 1.5;
+    white-space: pre;
+}
+
+/* Tema VS Code Dark+ para highlight.js */
+.pdf-content .code-block .hljs {
+    background: transparent;
+    color: var(--code-text);
+}
+
+.pdf-content .code-block .hljs-comment,
+.pdf-content .code-block .hljs-quote {
+    color: #6a9955;
+    font-style: italic;
+}
+
+.pdf-content .code-block .hljs-keyword,
+.pdf-content .code-block .hljs-selector-tag,
+.pdf-content .code-block .hljs-literal,
+.pdf-content .code-block .hljs-doctag,
+.pdf-content .code-block .hljs-name {
+    color: #569cd6;
+}
+
+.pdf-content .code-block .hljs-string,
+.pdf-content .code-block .hljs-regexp,
+.pdf-content .code-block .hljs-addition,
+.pdf-content .code-block .hljs-template-tag {
+    color: #ce9178;
+}
+
+.pdf-content .code-block .hljs-number,
+.pdf-content .code-block .hljs-symbol,
+.pdf-content .code-block .hljs-bullet {
+    color: #b5cea8;
+}
+
+.pdf-content .code-block .hljs-title,
+.pdf-content .code-block .hljs-section {
+    color: #dcdcaa;
+}
+
+.pdf-content .code-block .hljs-variable,
+.pdf-content .code-block .hljs-template-variable,
+.pdf-content .code-block .hljs-params,
+.pdf-content .code-block .hljs-attr,
+.pdf-content .code-block .hljs-property,
+.pdf-content .code-block .hljs-selector-attr,
+.pdf-content .code-block .hljs-selector-class,
+.pdf-content .code-block .hljs-selector-id,
+.pdf-content .code-block .hljs-selector-pseudo {
+    color: #9cdcfe;
+}
+
+.pdf-content .code-block .hljs-type,
+.pdf-content .code-block .hljs-built_in,
+.pdf-content .code-block .hljs-title.class_ {
+    color: #4ec9b0;
+}
+
+.pdf-content .code-block .hljs-tag .hljs-name {
+    color: #569cd6;
+}
+
+.pdf-content .code-block .hljs-tag .hljs-attr {
+    color: #9cdcfe;
+}
+
+.pdf-content .code-block .hljs-attribute {
+    color: #9cdcfe;
+}
+
+.pdf-content .code-block .hljs-meta,
+.pdf-content .code-block .hljs-meta .hljs-keyword {
+    color: #569cd6;
+}
+
+.pdf-content .code-block .hljs-operator,
+.pdf-content .code-block .hljs-punctuation {
+    color: var(--code-text);
+}
+
+.pdf-content .code-block .hljs-deletion {
+    color: #f44747;
+}
+
+.pdf-content .code-block .hljs-link {
+    color: #9cdcfe;
+    text-decoration: underline;
+}
+
+.pdf-content .code-block .hljs-emphasis {
+    font-style: italic;
+}
+
+.pdf-content .code-block .hljs-strong {
+    font-weight: 700;
 }
 
 .pdf-content table {
@@ -582,7 +774,7 @@ aside .pane-header h1 {
     text-overflow: ellipsis;
     text-align: right;
     font-size: .68rem;
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: .03em;
     color: var(--muted);
     pointer-events: none;
@@ -659,5 +851,11 @@ aside .pane-header h1 {
     .pdf-preview.grid .pdf-page::after,
     .pdf-preview.grid .pdf-sheet::after {
         display: none;
+    }
+
+    .pdf-content .code-block,
+    .pdf-content .code-block * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 }
