@@ -712,23 +712,49 @@ function inlineToPlainText(raw) {
   return template.content.textContent.trim();
 }
 
-function updatePreviewTitle(source, tokens) {
-  let title = null;
-
+function resolveHeadingTitle(source, tokens) {
   if (tokens) {
     const heading = tokens.find((token) => token.type === 'heading' && token.depth === 1);
-    if (heading) title = inlineToPlainText(heading.text);
-  } else {
-    const match = source.match(/^[ \t]*#[ \t]+(.+?)[ \t]*$/m);
-    if (match) title = match[1].trim();
+    return heading ? inlineToPlainText(heading.text) : null;
   }
 
+  const match = source.match(/^[ \t]*#[ \t]+(.+?)[ \t]*$/m);
+  return match ? match[1].trim() : null;
+}
+
+function updatePreviewTitle(source, tokens) {
+  const headingTitle = resolveHeadingTitle(source, tokens);
+
+  let title = headingTitle;
   if (!title && currentDoc) title = currentDoc.name;
 
   previewTitle.textContent = title ? ` ${title}` : '';
   previewTitle.title = title || '';
 
   return title;
+}
+
+function sanitizeFileName(name) {
+  return name
+    .replace(/\.pdf$/i, '')
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[. ]+$/, '')
+    .slice(0, 120)
+    .trim();
+}
+
+function getExportFileName() {
+  if (!currentDoc) return 'Contenido PDF';
+
+  const source = editor.value;
+  const headingTitle = typeof marked !== 'undefined'
+    ? resolveHeadingTitle(source, marked.lexer(source))
+    : resolveHeadingTitle(source, null);
+
+  const fallback = currentDoc.file.name.replace(/\.md$/i, '');
+  return sanitizeFileName(headingTitle || fallback) || 'Contenido PDF';
 }
 
 function render() {
@@ -1113,6 +1139,15 @@ function initFormatControls() {
     if (optionsPopover && typeof optionsPopover.hidePopover === 'function') {
       optionsPopover.hidePopover();
     }
+
+    const previousTitle = document.title;
+    const restoreTitle = () => {
+      document.title = previousTitle;
+      window.removeEventListener('afterprint', restoreTitle);
+    };
+
+    window.addEventListener('afterprint', restoreTitle);
+    document.title = getExportFileName();
     window.print();
   });
 }
